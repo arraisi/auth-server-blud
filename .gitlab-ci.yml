@@ -1,6 +1,8 @@
 variables:
   MAVEN_CLI_OPTS: "--show-version"
+  # change this to your app directory
   APP_DIR: "/home/app/applications/auth"
+  # change this to your name app
   APP_NAME: "tabeldata-auth"
   DOCKER_REGISTRY_HOSTED: "tabeldata.ip-dynamic.com:8087"
   DOCKER_REGISTRY_PUBLIC: "tabeldata.ip-dynamic.com:8088"
@@ -13,19 +15,46 @@ cache:
 building:
   stage: build
   before_script:
-    - 'docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD $DOCKER_REGISTRY_HOSTED'
-    - 'docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD $DOCKER_REGISTRY_PUBLIC'
     - 'mvn versions:set -DnewVersion=$CI_COMMIT_TAG'
   script:
-    - 'mvn $MAVEN_CLI_OPTS clean package install'
+    - 'mvn $MAVEN_CLI_OPTS clean package'
   only:
     - /-release$/
   artifacts:
     paths:
       - target/*.jar
 
+docker-publish:
+  stage: build
+  before_script:
+    - 'docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD $DOCKER_REGISTRY_HOSTED'
+    - 'docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD $DOCKER_REGISTRY_PUBLIC'
+    - 'mvn versions:set -DnewVersion=$CI_COMMIT_TAG'
+  script:
+    - 'mvn $MAVEN_CLI_OPTS clean install'
+  only:
+    - /-stable/
+    artifacts:
+      paths:
+        - target/*.jar
+
 copy-artifact:
   stage: deploy
+  before_script:
+    - 'mkdir -p $APP_DIR'
+    - 'sudo echo -e "[Unit]\n
+Description=$APP_NAME\n
+After=syslog.target\n
+\n
+[Service]\n
+ExecStart=$APP_DIR/application.jar\n
+SuccessExitStatus=143\n
+\n
+[Install]\n
+WantedBy=multi-user.target
+      " >| /etc/systemd/system/$APP_NAME.service'
+    - 'sudo systemctl daemon-reload'
+
   script:
     - 'cp -u target/*.jar $APP_DIR/$APP_NAME-$CI_COMMIT_TAG.jar'
     - 'rm -rf $APP_DIR/application.jar && ln -s $APP_DIR/$APP_NAME-$CI_COMMIT_TAG.jar $APP_DIR/application.jar'
