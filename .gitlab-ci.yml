@@ -34,9 +34,6 @@ docker-publish:
     - 'mvn $MAVEN_CLI_OPTS clean install'
   only:
     - /-stable/
-    artifacts:
-      paths:
-        - target/*.jar
 
 copy-artifact:
   stage: deploy
