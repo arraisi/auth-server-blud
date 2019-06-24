@@ -1,0 +1,34 @@
+variables:
+  MAVEN_CLI_OPTS: "--show-version"
+  APP_DIR: "/home/app/applications/auth"
+  APP_NAME: "tabeldata-auth"
+  DOCKER_REGISTRY_HOSTED: "tabeldata.ip-dynamic.com:8087"
+  DOCKER_REGISTRY_PUBLIC: "tabeldata.ip-dynamic.com:8088"
+  DOCKER_USERNAME: "tabeldata"
+  DOCKER_PASSWORD: "tabeldata"
+cache:
+  paths:
+    - .m2/repository
+
+building:
+  stage: build
+  before_script:
+    - 'docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD $DOCKER_REGISTRY_HOSTED'
+    - 'docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD $DOCKER_REGISTRY_PUBLIC'
+    - 'mvn versions:set -DnewVersion=$CI_COMMIT_TAG'
+  script:
+    - 'mvn $MAVEN_CLI_OPTS clean package install'
+  only:
+    - /-release$/
+  artifacts:
+    paths:
+      - target/*.jar
+
+copy-artifact:
+  stage: deploy
+  script:
+    - 'cp -u target/*.jar $APP_DIR/$APP_NAME-$CI_COMMIT_TAG.jar'
+    - 'rm -rf $APP_DIR/application.jar && ln -s $APP_DIR/$APP_NAME-$CI_COMMIT_TAG.jar $APP_DIR/application.jar'
+    - 'sudo systemctl restart $APP_NAME.service'
+  only:
+    - /-release$/

@@ -1,0 +1,10 @@
+[Unit]
+Description=tabeldata-oauth2-sso
+After=syslog.target
+
+[Service]
+ExecStart=/var/applications/tabeldata/auth/application.jar
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target

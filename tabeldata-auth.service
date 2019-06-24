@@ -1,0 +1,11 @@
+[Unit]
+Description=tabeldata-auth
+After=syslog.target
+
+[Service]
+User=app
+ExecStart=/home/app/applications/auth/application.jar
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target

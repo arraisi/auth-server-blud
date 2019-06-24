@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <meta name="description" content=""/>
+    <meta name="author" content=""/>
+    <link rel="icon" href="../static/favicon.ico" th:href="@{/static/favicon.ico}"/>
+    <link rel="stylesheet" href="/webjars/bootstrap/4.1.3/css/bootstrap.min.css"
+          th:href="@{/webjars/bootstrap/4.1.3/css/bootstrap.min.css}"/>
+    <link rel="stylesheet" href="/webjars/font-awesome/5.3.1/css/all.min.css"
+          th:href="@{/webjars/font-awesome/5.3.1/css/all.min.css}"/>
+    <link rel="stylesheet" href="../static/login-page.css" th:href="@{/static/login-page.css}"/>
+    <title>Authentication Page</title>
+</head>
+<body class="text-center">
+<form class="form-signin" th:method="post" th:action="@{/sign-in}">
+    <img class="mb-4" src="../static/bootstrap-solid.svg" th:src="@{/static/bootstrap-solid.svg}" alt="" width="72"
+         height="72">
+    <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
+    <label for="inputEmail" class="sr-only">Username</label>
+    <input type="text" name="user" id="inputEmail" class="form-control" placeholder="Username" required autofocus>
+    <label for="inputPassword" class="sr-only">Password</label>
+    <input type="password" name="passwd" id="inputPassword" class="form-control" placeholder="Password" required>
+    <div class="checkbox mb-3">
+        <label>
+            <input type="checkbox" value="remember-me"> Remember me
+        </label>
+    </div>
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+    <p class="mt-5 mb-3 text-muted">&copy; 2017-2018</p>
+</form>
+<script type="application/javascript" src="/webjars/jquery/3.3.1-1/jquery.min.js"
+        th:src="@{/webjars/jquery/3.3.1-1/jquery.min.js}"></script>
+<script type="application/javascript" src="/webjars/bootstrap/4.1.3/js/bootstrap.bundle.min.js"
+        th:src="@{/webjars/bootstrap/4.1.3/js/bootstrap.bundle.min.js}"></script>
+<script type="application/javascript" src="/webjars/font-awesome/5.3.1/js/all.js"
+        th:src="@{/webjars/font-awesome/5.3.1/js/all.js}"></script>
+<script type="application/javascript" src="/webjars/moment/2.22.2/min/moment.min.js"
+        th:src="@{/webjars/moment/2.22.2/min/moment.min.js}"></script>
+</body>
+</html>
