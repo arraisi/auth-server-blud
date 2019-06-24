@@ -22,10 +22,13 @@ public class SwaggerConfiguration {
     private String applicationVersion;
     @Value("${spring.application.fullname}")
     private String applicationFullname;
+    @Value("${server.servlet.context-path}")
+    private String contextPath;
 
     @Bean
     public Docket apiDocket() {
         return new Docket(DocumentationType.SWAGGER_2)
+                .pathMapping(contextPath)
                 .select()
                 .apis(RequestHandlerSelectors.any())
                 .build()
