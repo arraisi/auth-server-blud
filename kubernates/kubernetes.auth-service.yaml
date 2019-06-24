@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-app
+  namespace: auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-app
+  template:
+    metadata:
+      labels:
+        app: auth-app
+    spec:
+      containers:
+        - name: tabeldata-oauth2-auth-server
+          image: tabeldata.ip-dynamic.com:8087/tabeldata/tabeldata-oauth2-auth-server:1.0.0-release
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: auth-config
+          command:
+            - "java"
+            - "-jar"
+            - "-Djava.security.egd=file:/dev/./urandom"
+            - "/tabeldata-oauth2-auth-server.jar"
+          args:
+            - "--DATABASE_HOST=$(DATABASE_HOST)"
+            - "--DATABASE_PORT=$(DATABASE_PORT)"
+            - "--DATABASE_USER=$(DATABASE_USER)"
+            - "--DATABASE_PASSWORD=$(DATABASE_PASSWORD)"
+            - "--DATABASE_NAME=$(DATABASE_NAME)"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-config
+  namespace: auth
+  labels:
+    app: auth-app
+data:
+  DATABASE_HOST: "auth-db-service"
+  DATABASE_PORT: "5432"
+  DATABASE_USER: "tabeldata_auth"
+  DATABASE_PASSWORD: "tabeldata_auth"
+  DATABASE_NAME: "tabeldata_auth"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: auth
+spec:
+  selector:
+    app: auth-app
+  ports:
+    - port: 8080
+      targetPort: 8080

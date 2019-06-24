@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-db
+  namespace: auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-db
+  template:
+    metadata:
+      labels:
+        app: auth-db
+    spec:
+      containers:
+        - name: postgresql-db
+          imagePullPolicy: "IfNotPresent"
+          image: postgres:9.6
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: auth-db-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-db-config
+  namespace: auth
+  labels:
+    app: auth-db
+data:
+  POSTGRES_DB: tabeldata_auth
+  POSTGRES_USER: tabeldata_auth
+  POSTGRES_PASSWORD: tabeldata_auth
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-db-service
+  namespace: auth
+spec:
+  selector:
+    app: auth-db
+  ports:
+    - port: 5432
+      protocol: "TCP"
+      targetPort: 5432
