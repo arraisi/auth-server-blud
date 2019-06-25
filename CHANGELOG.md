@@ -1,3 +1,7 @@
+# `v1.0.3-release`
+
+- update `server.servlet.context-path=${project.artifactId}`
+
 # `v1.0.2-release`
 
 - Fixing oauth client / resource id information
