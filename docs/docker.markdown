@@ -18,7 +18,16 @@ mvn clean install
 Setelah membuild project ini dengan maven, kita bisa menjalankan project ini di docker container dengan mudah. dengan bantuan perintah `docker-compose` seperti berikut:
 
 ```bash
-docker-compose -f docker-compose.yml up -d
+docker-compose -f docker/compose-postgres.yml -p auth up -d
 ```
 
 dengan perintah tersebut, maka kita udah di siapkan system required dari aplikasi ini yaitu seperti yang kita sebutkan diatas yaitu postgresql dan java. jadi kita tidak usah repot2 untuk install di os kita.
+
+
+## Stop service using docker-compose
+
+Untuk stop daemon service docker, gunakan perintah berikut:
+
+```bash
+docker-compose -f docker/compose-postgresql.yml -p auth down
+```

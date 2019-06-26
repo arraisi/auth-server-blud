@@ -11,7 +11,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - tabeldata_auth_server_network
+      - auth-server-network
   springboot:
     image: tabeldata-oauth2-auth-server:1.0.3-release
     environment:
@@ -21,18 +21,16 @@ services:
       - DATABASE_NAME=tabeldata_auth
       - DATABASE_USER=tabeldata_auth
       - DATABASE_PASSWORD=tabeldata_auth
-    ports:
-      - 8080:8080
     entrypoint:
       - "java"
       - '-jar'
       - "-Djava.security.egd=file:/dev/./urandom"
       - "/var/applications/application.jar"
     networks:
-      - tabeldata_auth_server_network
+      - auth-server-network
     depends_on:
       - postgres
 volumes:
   postgres_data:
 networks:
-  tabeldata_auth_server_network:
+  auth-server-network:
