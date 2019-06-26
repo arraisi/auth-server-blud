@@ -2,7 +2,7 @@
 
 Syntax for release management system using:
 
-ex: `x.y.z-relase`
+ex: `x.y.z-release`
 
 - `x` means major fitur
 - `y` means minor fitur
