@@ -24,14 +24,14 @@ building:
     paths:
       - target/*.jar
 
-docker-publish:
-  stage: build
+docker-push:
+  stage: deploy
   before_script:
     - 'docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD $DOCKER_REGISTRY_HOSTED'
     - 'docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD $DOCKER_REGISTRY_PUBLIC'
     - 'mvn versions:set -DnewVersion=$CI_COMMIT_TAG'
   script:
-    - 'mvn $MAVEN_CLI_OPTS clean install'
+    - 'mvn $MAVEN_CLI_OPTS clean deploy'
   only:
     - /-stable/
 
