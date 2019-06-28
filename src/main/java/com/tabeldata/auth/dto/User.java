@@ -1,4 +1,4 @@
-package com.tabeldata.auth.model;
+package com.tabeldata.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Deprecated
 public class User implements Serializable {
 
     private String id;

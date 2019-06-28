@@ -1,7 +1,7 @@
-package com.tabeldata.auth.repository;
+package com.tabeldata.auth.dao;
 
-import com.tabeldata.auth.model.Authority;
-import com.tabeldata.auth.model.User;
+import com.tabeldata.auth.dto.Authority;
+import com.tabeldata.auth.dto.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -14,7 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 @Repository
-public class AuthenticationRepository implements Serializable {
+@Deprecated
+public class AuthenticationDao implements Serializable {
 
     @Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;

@@ -1,4 +1,4 @@
-package com.tabeldata.auth.model;
+package com.tabeldata.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,6 +9,7 @@ import java.io.Serializable;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Deprecated
 public class Authority implements Serializable {
 
     private Integer id;

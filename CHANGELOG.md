@@ -1,3 +1,13 @@
+# `v1.0.4-release`
+
+- Deprecate class `com.tabeldata.auth.dto.Authority`
+- Deprecate class `com.tabeldata.auth.dto.Privilege`
+- Deprecate class `com.tabeldata.auth.dto.User`
+- Deprecate class `com.tabeldata.auth.dao.AuthenticationDao`
+- remove package `com.tabeldata.controller`
+- remove package `com.tabeldata.endpoint`
+- remove docs folder `docs -> wiki`
+
 # `v1.0.3-release`
 
 - update `server.servlet.context-path=${project.artifactId}`
