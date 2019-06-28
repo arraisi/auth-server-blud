@@ -1,9 +1,6 @@
 # `v1.0.4-release`
 
-- Deprecate class `com.tabeldata.auth.dto.Authority`
-- Deprecate class `com.tabeldata.auth.dto.Privilege`
-- Deprecate class `com.tabeldata.auth.dto.User`
-- Deprecate class `com.tabeldata.auth.dao.AuthenticationDao`
+- list of menu request by module and roles
 - remove package `com.tabeldata.controller`
 - remove package `com.tabeldata.endpoint`
 - remove docs folder `docs -> wiki`

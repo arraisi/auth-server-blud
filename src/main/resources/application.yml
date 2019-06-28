@@ -53,5 +53,5 @@ spring:
 logging:
   level:
     org.springframework: ERROR
-    com.tabeldata: DEBUG
-  file: ${spring.application.name}.log
+    com.tabeldata: ${LOG_LEVEL:DEBUG}
+  file: ${LOG_LOCATION:${spring.application.name}.log}

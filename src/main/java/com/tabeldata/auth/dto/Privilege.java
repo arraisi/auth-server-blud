@@ -10,7 +10,6 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-@Deprecated
 public class Privilege implements Serializable {
 
     private String id;

@@ -9,7 +9,6 @@ import java.io.Serializable;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Deprecated
 public class Authority implements Serializable {
 
     private Integer id;

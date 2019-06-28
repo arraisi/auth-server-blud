@@ -10,7 +10,6 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-@Deprecated
 public class User implements Serializable {
 
     private String id;

@@ -56,7 +56,7 @@ public class SecurityWebApplication extends WebSecurityConfigurerAdapter {
         http.cors().disable()
                 .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
 
-        http.authorizeRequests()
+        http.antMatcher("/app/**").authorizeRequests()
                 .antMatchers("/oauth/**",
                         "/swagger-ui.html",
                         "/swagger-resources/**",
