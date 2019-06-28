@@ -51,7 +51,7 @@ alter table auth.authorities
 references auth.roles (id) on update cascade on delete cascade;
 
 alter table auth.authorities
-  add constraint uq_authorities_role_and_privilage unique (privilege_id, role_id);
+  add constraint uq_authorities_role_and_privilege unique (privilege_id, role_id);
 
 -- create user privileges
 create table auth.user_privileges (
