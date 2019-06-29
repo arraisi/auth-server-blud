@@ -10,7 +10,7 @@ variables:
   DOCKER_PASSWORD: "tabeldata"
 cache:
   paths:
-    - .m2/dao
+    - .m2/repository
 
 building:
   stage: build
