@@ -3,7 +3,7 @@ variables:
   # change this to your app directory
   APP_DIR: "/home/app/applications/auth"
   # change this to your name app
-  APP_NAME: "tabeldata-auth"
+  APP_NAME: "blud-auth"
   DOCKER_REGISTRY_HOSTED: "tabeldata.ip-dynamic.com:8087"
   DOCKER_REGISTRY_PUBLIC: "tabeldata.ip-dynamic.com:8088"
   DOCKER_USERNAME: "tabeldata"
