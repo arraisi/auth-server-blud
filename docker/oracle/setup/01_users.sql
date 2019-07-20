@@ -1,4 +1,4 @@
--- schema => public,oauth,auth,resource,component
+SET SERVEROUTPUT ON;
 create user auth identified by auth;
 
 grant
