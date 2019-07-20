@@ -1,8 +1,8 @@
 spring:
   datasource:
     url: jdbc:oracle:thin:@${DATABASE_HOST:localhost}:${DATABASE_PORT:1521}:${DATABASE_SID:xe}
-    username: ${DATABASE_USER:system}
-    password: ${DATABASE_PASSWORD:oracleSysdba2018}
+    username: ${DATABASE_USER:auth}
+    password: ${DATABASE_PASSWORD:auth}
   jpa:
     generate-ddl: false
     hibernate:
@@ -20,10 +20,13 @@ spring:
           use_jdbc_metadata_defaults: false
   flyway:
     encoding: UTF-8
-    enabled: true
+    enabled: false
     baseline-on-migrate: false
     locations: classpath:/db/migration/oracle11
     schemas: auth
-    clean-disabled: false
+    clean-disabled: true
     clean-on-validation-error: true
     connect-retries: 3
+  queries:
+    authentication: select * from table(AUTH_AUTHENTICATION(?))
+    authorization: select * from table(AUTH_AUTHORIZATION(?))

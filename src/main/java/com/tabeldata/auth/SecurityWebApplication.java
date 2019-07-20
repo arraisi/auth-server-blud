@@ -2,6 +2,7 @@ package com.tabeldata.auth;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -29,14 +30,20 @@ public class SecurityWebApplication extends WebSecurityConfigurerAdapter {
     @Qualifier("dataSource")
     private DataSource dataSource;
 
+    @Value("${spring.queries.authentication}")
+    private String queryAuthentication;
+
+    @Value("${spring.queries.authorization}")
+    private String queryAuthorization;
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth
                 .jdbcAuthentication()
                 .dataSource(dataSource)
                 .passwordEncoder(passwordEncoder())
-                .usersByUsernameQuery("select * from auth.authentication(?)")
-                .authoritiesByUsernameQuery("select * from auth.authorization(?)");
+                .usersByUsernameQuery(queryAuthentication)
+                .authoritiesByUsernameQuery(queryAuthorization);
     }
 
     @Bean
@@ -47,16 +54,16 @@ public class SecurityWebApplication extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) throws Exception {
+        web.debug(false);
         web.ignoring().antMatchers(HttpMethod.OPTIONS, "/**");
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-
         http.cors().disable()
                 .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
 
-        http.antMatcher("/app/**").authorizeRequests()
+        http.authorizeRequests()
                 .antMatchers("/oauth/**",
                         "/swagger-ui.html",
                         "/swagger-resources/**",
@@ -70,7 +77,7 @@ public class SecurityWebApplication extends WebSecurityConfigurerAdapter {
                 .loginPage("/sign-in")
                 .passwordParameter("passwd")
                 .usernameParameter("user")
-                .defaultSuccessUrl("/", false)
+                .defaultSuccessUrl("/app/home/default", true)
                 .permitAll();
     }
 
