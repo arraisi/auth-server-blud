@@ -15,6 +15,9 @@ create table AUTH_USERS
     last_update_date     timestamp
 );
 
+create sequence roles_seq
+START WITH 1 increment by 1;
+
 create table AUTH_ROLES
 (
     id          integer       not null primary key,

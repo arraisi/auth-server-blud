@@ -1,3 +1,7 @@
+-- drop function auth_authentication;
+-- drop type auth_table;
+-- drop type auth_object;
+
 create or replace type auth_object as object
 (
     username varchar2(100),
