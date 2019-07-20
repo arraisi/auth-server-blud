@@ -1,13 +1,13 @@
 insert into AUTH_USERS
 (ID, USERNAME, PASSWORD, EMAIL, IS_ACTIVE, IS_KEEP_ACTIVE, IS_LOCKED, IS_SUDO,
  LOGIN_FAILED_COUNTER, CREATED_BY, CREATED_DATE, LAST_UPDATE_BY, LAST_UPDATE_DATE)
-values ('admin', 'admin', '$2y$11$NRCjQ4UPgofnirMQEXYerOPS5ycxx9CaR1wsTfrS2FB17mURU2HTy', 'admin@gmail.com', 1, 0, 0, 1,
+values ('admin', 'admin', '$2a$11$8oI0gHo8H4Yypuzb.A1Y4.l.ed7Wf3sFiEfDPME8d3NVxSn2Lrtei', 'admin@gmail.com', 1, 0, 0, 1,
         0, 'migration', current_timestamp, null, null);
 
 insert into AUTH_USERS
 (ID, USERNAME, PASSWORD, EMAIL, IS_ACTIVE, IS_KEEP_ACTIVE, IS_LOCKED, IS_SUDO,
  LOGIN_FAILED_COUNTER, CREATED_BY, CREATED_DATE, LAST_UPDATE_BY, LAST_UPDATE_DATE)
-values ('user', 'user', '$2y$11$dh.ucxCF1yie3jfFMnbu8uRfBQ1cXPVBGBwg57SLpy6mUhh2eBsbm', 'user@gmail.com', 1, 0, 0, 0,
+values ('user', 'user', '$2a$11$LJjcUZkGsU1FV/WjWVuhu.R62ejtcL3C5L2zF/Fk29YmU.9YCV/xm', 'user@gmail.com', 1, 0, 0, 0,
         0, 'migration', current_timestamp, null, null);
 
 insert into AUTH_ROLES (ID, NAME, DESCRIPTION)
