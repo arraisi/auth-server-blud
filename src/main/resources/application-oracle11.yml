@@ -20,10 +20,10 @@ spring:
           use_jdbc_metadata_defaults: false
   flyway:
     encoding: UTF-8
-    enabled: false
-    baseline-on-migrate: true
+    enabled: true
+    baseline-on-migrate: false
     locations: classpath:/db/migration/oracle11
-    schemas: public,oauth,auth,resource,component
+    schemas: auth
     clean-disabled: false
     clean-on-validation-error: true
     connect-retries: 3

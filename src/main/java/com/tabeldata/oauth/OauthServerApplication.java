@@ -1,6 +1,6 @@
 package com.tabeldata.oauth;
 
-import com.tabeldata.oauth.repository.JdbcTokenStoreCustomizer;
+import com.tabeldata.oauth.repository.JdbcTokenStoreCustom;
 import com.tabeldata.oauth.repository.OauthClientDetailsJdbcLoader;
 import com.tabeldata.oauth.service.DefaultTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +21,8 @@ import org.springframework.security.oauth2.provider.approval.TokenStoreUserAppro
 import org.springframework.security.oauth2.provider.error.OAuth2AccessDeniedHandler;
 import org.springframework.security.oauth2.provider.request.DefaultOAuth2RequestFactory;
 import org.springframework.security.oauth2.provider.token.TokenEnhancerChain;
-import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 
-import javax.sql.DataSource;
 import java.util.Arrays;
 
 import static org.springframework.http.HttpMethod.*;
@@ -43,8 +41,7 @@ public class OauthServerApplication extends AuthorizationServerConfigurerAdapter
     @Autowired
     private OauthClientDetailsJdbcLoader oauthClientService;
     @Autowired
-    @Qualifier("dataSource")
-    private DataSource dataSource;
+    private JdbcTokenStoreCustom tokenStore;
 
     @Bean
     public JwtAccessTokenConverter accessTokenConverter() {
@@ -54,14 +51,8 @@ public class OauthServerApplication extends AuthorizationServerConfigurerAdapter
     }
 
     @Bean
-    public JdbcTokenStoreCustomizer tokenStore() {
-        JdbcTokenStoreCustomizer tokenStore = new JdbcTokenStoreCustomizer(dataSource);
-        return tokenStore;
-    }
-
-    @Bean
     @Primary
-    public DefaultTokenService tokenServices(JdbcTokenStoreCustomizer token) {
+    public DefaultTokenService tokenServices(JdbcTokenStoreCustom token) {
         DefaultTokenService defaultTokenServices = new DefaultTokenService(
                 token, oauthClientService, tokenEnhancer, authenticationManager);
         defaultTokenServices.setSupportRefreshToken(false);
@@ -88,7 +79,7 @@ public class OauthServerApplication extends AuthorizationServerConfigurerAdapter
         tokenEnhancerChain.setTokenEnhancers(
                 Arrays.asList(tokenEnhancer, accessTokenConverter()));
         endpoints
-                .tokenStore(tokenStore())
+                .tokenStore(tokenStore)
                 .tokenEnhancer(tokenEnhancerChain)
                 .authenticationManager(authenticationManager)
                 .allowedTokenEndpointRequestMethods(GET, POST, PUT, DELETE);
@@ -96,7 +87,7 @@ public class OauthServerApplication extends AuthorizationServerConfigurerAdapter
 
     @Bean
     @Autowired
-    public TokenStoreUserApprovalHandler userApprovalHandler(TokenStore tokenStore) {
+    public TokenStoreUserApprovalHandler userApprovalHandler(JdbcTokenStoreCustom tokenStore) {
         TokenStoreUserApprovalHandler handler = new TokenStoreUserApprovalHandler();
         handler.setTokenStore(tokenStore);
         handler.setRequestFactory(new DefaultOAuth2RequestFactory(oauthClientService));
@@ -106,7 +97,7 @@ public class OauthServerApplication extends AuthorizationServerConfigurerAdapter
 
     @Bean
     @Autowired
-    public ApprovalStore approvalStore(TokenStore tokenStore) throws Exception {
+    public ApprovalStore approvalStore(JdbcTokenStoreCustom tokenStore) throws Exception {
         TokenApprovalStore store = new TokenApprovalStore();
         store.setTokenStore(tokenStore);
         return store;

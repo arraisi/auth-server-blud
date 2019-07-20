@@ -1,6 +1,8 @@
 SET SERVEROUTPUT ON;
 create user auth identified by auth;
 
-grant
-    create session, connect, resource,
-    create table, create view, create sequence, create procedure to auth;
+-- register to connect
+grant create session, connect, resource to auth;
+
+-- grant privileges
+grant all privileges to auth;

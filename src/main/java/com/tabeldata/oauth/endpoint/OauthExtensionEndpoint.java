@@ -4,7 +4,7 @@ import com.maryanto.dimas.plugins.web.commons.ui.datatables.DataTablesRequest;
 import com.maryanto.dimas.plugins.web.commons.ui.datatables.DataTablesResponse;
 import com.tabeldata.oauth.models.OauthAccessTokenExtended;
 import com.tabeldata.oauth.models.OauthAccessTokenHistory;
-import com.tabeldata.oauth.repository.JdbcTokenStoreCustomizer;
+import com.tabeldata.oauth.repository.JdbcTokenStoreCustom;
 import com.tabeldata.oauth.service.DefaultTokenService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,7 @@ public class OauthExtensionEndpoint {
     @Autowired
     private DefaultTokenService tokenServices;
     @Autowired
-    private JdbcTokenStoreCustomizer tokenStore;
+    private JdbcTokenStoreCustom tokenStore;
 
     @ResponseBody
     @PostMapping("/revoke")
