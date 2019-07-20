@@ -23,7 +23,7 @@ spring:
     check-template-location: true
     template-resolver-order: 0
   profiles:
-    active: postgresql
+    active: oracle11
 logging:
   level:
     org.springframework: ERROR

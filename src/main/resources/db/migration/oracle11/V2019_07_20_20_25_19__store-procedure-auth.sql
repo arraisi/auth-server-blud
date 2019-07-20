@@ -1,9 +1,9 @@
-drop function auth_authentication;
-drop type auth_authenction_list;
-drop type auth_authentication_object;
-drop function auth_authorization;
-drop type auth_authorization_list;
-drop type auth_authorization_object;
+-- drop function auth_authentication;
+-- drop type auth_authenction_list;
+-- drop type auth_authentication_object;
+-- drop function auth_authorization;
+-- drop type auth_authorization_list;
+-- drop type auth_authorization_object;
 
 create or replace type auth_authentication_object as object
 (

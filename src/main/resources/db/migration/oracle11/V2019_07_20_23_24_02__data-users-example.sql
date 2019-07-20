@@ -35,4 +35,3 @@ VALUES (SYS_GUID(), 'register-user', 3, 'migration', current_timestamp);
 
 insert into AUTH_USER_PRIVILEGES(ID, PRIVILEGE_ID, USER_ID, CREATED_BY, CREATED_DATE)
 values (sys_guid(), 'public', 'user', 'migration', current_timestamp);
-

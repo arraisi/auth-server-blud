@@ -28,5 +28,5 @@ spring:
     clean-on-validation-error: true
     connect-retries: 3
   queries:
-    authentication: select * from table(AUTH_AUTHENTICATION(?))
-    authorization: select * from table(AUTH_AUTHORIZATION(?))
+    authentication: select USERNAME AS username, PASSWORD AS password, 1 as enabled from table(AUTH_AUTHENTICATION(?))
+    authorization: select USERNAME AS username, AUTHORITY as authority from table(AUTH_AUTHORIZATION(?))
