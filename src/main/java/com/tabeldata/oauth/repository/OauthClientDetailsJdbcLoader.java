@@ -33,13 +33,9 @@ public class OauthClientDetailsJdbcLoader implements ClientDetailsService {
         try {
             log.info("clientId: {}", clientId);
             client = this.service.findByClientId(clientId);
-            log.info("client detail 1: {}", client);
             client.setApplications(service.findApplicationByClientId(clientId));
-            log.info("client detail 2: {}", client);
             client.setOauthGrantTypes(service.findGrantTypeByClientId(clientId));
-            log.info("client detail 3: {}", client);
             client.setRedirectUrls(service.findRedirectUrlsByClientId(clientId));
-            log.info("client detail 3: {}", client);
             client.setOauthScopes(service.findScopeByClientId(clientId));
             log.info("client detail: {}", client);
         }catch (SQLException sqle){
