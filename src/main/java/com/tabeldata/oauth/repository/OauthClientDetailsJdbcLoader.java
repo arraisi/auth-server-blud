@@ -38,7 +38,7 @@ public class OauthClientDetailsJdbcLoader implements ClientDetailsService {
             client.setRedirectUrls(service.findRedirectUrlsByClientId(clientId));
             client.setOauthScopes(service.findScopeByClientId(clientId));
             log.info("client detail: {}", client);
-        }catch (SQLException sqle){
+        } catch (SQLException sqle) {
             log.error("something wrong!", sqle);
             throw new UsernameNotFoundException("client_id not found!", sqle);
         } catch (EmptyResultDataAccessException erde) {
