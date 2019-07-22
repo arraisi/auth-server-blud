@@ -1,7 +1,6 @@
 package com.tabeldata.oauth.repository;
 
 import com.maryanto.dimas.plugins.web.commons.ui.datatables.DataTablesRequest;
-import com.maryanto.dimas.plugins.web.commons.ui.datatables.dao.DaoDataTablesPattern;
 import com.tabeldata.oauth.models.OauthAccessTokenExtended;
 import com.tabeldata.oauth.models.OauthAccessTokenHistory;
 import org.apache.commons.lang3.StringUtils;
@@ -26,7 +25,6 @@ import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.util.Assert;
 
 import javax.sql.DataSource;
-import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -40,9 +38,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializable, DaoDataTablesPattern<OauthAccessTokenExtended> {
+public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements JdbcTokenStoreCustom {
 
-    private final static Logger console = LoggerFactory.getLogger(JdbcTokenStoreCustomizer.class);
+    private final static Logger console = LoggerFactory.getLogger(JdbcTokenStoreCustomPostgreSQL.class);
 
     private String insertAccessTokenSql = "insert into oauth.access_token (token_id, token, auth_id, user_name, client_id, authentication, refresh_token, ip_address)\n" +
             "values (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -103,7 +101,7 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
     }
 
 
-    public JdbcTokenStoreCustomizer(DataSource dataSource) {
+    public JdbcTokenStoreCustomPostgreSQL(DataSource dataSource) {
         super(dataSource);
         Assert.notNull(dataSource, "DataSource required");
         setAuthenticationKeyGenerator(authenticationKeyGenerator);
@@ -119,7 +117,7 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
         try {
             accessToken = this.jdbcTemplate.queryForObject(
                     this.selectAccessTokenFromAuthenticationSql,
-                    (rs, rowNum) -> JdbcTokenStoreCustomizer.this.deserializeAccessToken(rs.getBytes(2)),
+                    (rs, rowNum) -> JdbcTokenStoreCustomPostgreSQL.this.deserializeAccessToken(rs.getBytes(2)),
                     key);
         } catch (EmptyResultDataAccessException var5) {
             if (console.isDebugEnabled()) {
@@ -185,7 +183,7 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
         try {
             accessToken = this.jdbcTemplate.queryForObject(
                     this.selectAccessTokenSql,
-                    (rs, rowNum) -> JdbcTokenStoreCustomizer.this.deserializeAccessToken(rs.getBytes(2)),
+                    (rs, rowNum) -> JdbcTokenStoreCustomPostgreSQL.this.deserializeAccessToken(rs.getBytes(2)),
                     this.extractTokenKey(tokenValue));
         } catch (EmptyResultDataAccessException var4) {
             if (console.isInfoEnabled()) {
@@ -247,7 +245,7 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
         try {
             authentication = this.jdbcTemplate.queryForObject(
                     this.selectAccessTokenAuthenticationSql,
-                    (rs, rowNum) -> JdbcTokenStoreCustomizer.this.deserializeAuthentication(rs.getBytes(2)),
+                    (rs, rowNum) -> JdbcTokenStoreCustomPostgreSQL.this.deserializeAuthentication(rs.getBytes(2)),
                     this.extractTokenKey(token));
         } catch (EmptyResultDataAccessException var4) {
             if (console.isInfoEnabled()) {
@@ -279,7 +277,7 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
         try {
             refreshToken = this.jdbcTemplate.queryForObject(
                     this.selectRefreshTokenSql,
-                    (rs, rowNum) -> JdbcTokenStoreCustomizer.this.deserializeRefreshToken(rs.getBytes(2)),
+                    (rs, rowNum) -> JdbcTokenStoreCustomPostgreSQL.this.deserializeRefreshToken(rs.getBytes(2)),
                     this.extractTokenKey(token));
         } catch (EmptyResultDataAccessException var4) {
             if (console.isInfoEnabled()) {
@@ -315,7 +313,7 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
         try {
             authentication = this.jdbcTemplate.queryForObject(
                     this.selectRefreshTokenAuthenticationSql,
-                    (rs, rowNum) -> JdbcTokenStoreCustomizer.this.deserializeAuthentication(rs.getBytes(2)),
+                    (rs, rowNum) -> JdbcTokenStoreCustomPostgreSQL.this.deserializeAuthentication(rs.getBytes(2)),
                     this.extractTokenKey(value));
         } catch (EmptyResultDataAccessException var4) {
             if (console.isInfoEnabled()) {
@@ -339,13 +337,14 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
         this.jdbcTemplate.update(this.deleteAccessTokenFromRefreshTokenSql, new Object[]{this.extractTokenKey(refreshToken)}, new int[]{12});
     }
 
+    @Override
     public Collection<OAuth2AccessToken> findTokensByClientId(String clientId) {
         List accessTokens = new ArrayList();
 
         try {
             accessTokens = this.jdbcTemplate.query(
                     this.selectAccessTokensFromClientIdSql,
-                    new JdbcTokenStoreCustomizer.SafeAccessTokenRowMapper(),
+                    new JdbcTokenStoreCustomPostgreSQL.SafeAccessTokenRowMapper(),
                     clientId);
         } catch (EmptyResultDataAccessException var4) {
             if (console.isInfoEnabled()) {
@@ -363,7 +362,7 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
         try {
             accessTokens = this.jdbcTemplate.query(
                     this.selectAccessTokensFromUserNameSql,
-                    new JdbcTokenStoreCustomizer.SafeAccessTokenRowMapper(),
+                    new JdbcTokenStoreCustomPostgreSQL.SafeAccessTokenRowMapper(),
                     userName);
         } catch (EmptyResultDataAccessException var4) {
             if (console.isInfoEnabled()) {
@@ -381,7 +380,7 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
         try {
             accessTokens = this.jdbcTemplate.query(
                     this.selectAccessTokensFromUserNameAndClientIdSql,
-                    new JdbcTokenStoreCustomizer.SafeAccessTokenRowMapper(),
+                    new JdbcTokenStoreCustomPostgreSQL.SafeAccessTokenRowMapper(),
                     userName, clientId);
         } catch (EmptyResultDataAccessException var5) {
             if (console.isInfoEnabled()) {
@@ -573,7 +572,7 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
 
         List<OauthAccessTokenExtended> list = this.namedJdbcTemplate.query(sb.toString(), map, (resultSet, i) -> {
             try {
-                OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomizer.this.deserializeAccessToken(resultSet.getBytes("access_token"));
+                OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomPostgreSQL.this.deserializeAccessToken(resultSet.getBytes("access_token"));
                 return new OauthAccessTokenExtended(
                         resultSet.getString("username"),
                         resultSet.getString("client_id"),
@@ -584,7 +583,7 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
                 );
             } catch (IllegalArgumentException var5) {
                 String token = resultSet.getString("token_id");
-                JdbcTokenStoreCustomizer.this.jdbcTemplate.update(JdbcTokenStoreCustomizer.this.deleteAccessTokenSql, token);
+                JdbcTokenStoreCustomPostgreSQL.this.jdbcTemplate.update(JdbcTokenStoreCustomPostgreSQL.this.deleteAccessTokenSql, token);
                 return null;
             }
         });
@@ -716,7 +715,7 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
             @Override
             public OauthAccessTokenHistory mapRow(ResultSet resultSet, int i) throws SQLException {
                 try {
-                    OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomizer.this.deserializeAccessToken(resultSet.getBytes("token"));
+                    OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomPostgreSQL.this.deserializeAccessToken(resultSet.getBytes("token"));
                     return new OauthAccessTokenHistory(
                             resultSet.getString("user_name"),
                             resultSet.getString("client_id"),
@@ -730,7 +729,7 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
                     );
                 } catch (IllegalArgumentException var5) {
                     String token = resultSet.getString("access_id");
-                    JdbcTokenStoreCustomizer.this.jdbcTemplate.update(JdbcTokenStoreCustomizer.this.deleteAccessTokenSql, token);
+                    JdbcTokenStoreCustomPostgreSQL.this.jdbcTemplate.update(JdbcTokenStoreCustomPostgreSQL.this.deleteAccessTokenSql, token);
                     return null;
                 }
             }
@@ -865,7 +864,7 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
             @Override
             public OauthAccessTokenHistory mapRow(ResultSet resultSet, int i) throws SQLException {
                 try {
-                    OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomizer.this.deserializeAccessToken(resultSet.getBytes("token"));
+                    OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomPostgreSQL.this.deserializeAccessToken(resultSet.getBytes("token"));
                     return new OauthAccessTokenHistory(
                             resultSet.getString("user_name"),
                             resultSet.getString("client_id"),
@@ -879,7 +878,7 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
                     );
                 } catch (IllegalArgumentException var5) {
                     String token = resultSet.getString("access_id");
-                    JdbcTokenStoreCustomizer.this.jdbcTemplate.update(JdbcTokenStoreCustomizer.this.deleteAccessTokenSql, token);
+                    JdbcTokenStoreCustomPostgreSQL.this.jdbcTemplate.update(JdbcTokenStoreCustomPostgreSQL.this.deleteAccessTokenSql, token);
                     return null;
                 }
             }
@@ -1018,7 +1017,7 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
             @Override
             public OauthAccessTokenHistory mapRow(ResultSet resultSet, int i) throws SQLException {
                 try {
-                    OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomizer.this.deserializeAccessToken(resultSet.getBytes("token"));
+                    OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomPostgreSQL.this.deserializeAccessToken(resultSet.getBytes("token"));
                     return new OauthAccessTokenHistory(
                             resultSet.getString("user_name"),
                             resultSet.getString("client_id"),
@@ -1032,7 +1031,7 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
                     );
                 } catch (IllegalArgumentException var5) {
                     String token = resultSet.getString("access_id");
-                    JdbcTokenStoreCustomizer.this.jdbcTemplate.update(JdbcTokenStoreCustomizer.this.deleteAccessTokenSql, token);
+                    JdbcTokenStoreCustomPostgreSQL.this.jdbcTemplate.update(JdbcTokenStoreCustomPostgreSQL.this.deleteAccessTokenSql, token);
                     return null;
                 }
             }
@@ -1080,10 +1079,10 @@ public class JdbcTokenStoreCustomizer extends JdbcTokenStore implements Serializ
 
         public OAuth2AccessToken mapRow(ResultSet rs, int rowNum) throws SQLException {
             try {
-                return JdbcTokenStoreCustomizer.this.deserializeAccessToken(rs.getBytes(2));
+                return JdbcTokenStoreCustomPostgreSQL.this.deserializeAccessToken(rs.getBytes(2));
             } catch (IllegalArgumentException var5) {
                 String token = rs.getString(1);
-                JdbcTokenStoreCustomizer.this.jdbcTemplate.update(JdbcTokenStoreCustomizer.this.deleteAccessTokenSql, token);
+                JdbcTokenStoreCustomPostgreSQL.this.jdbcTemplate.update(JdbcTokenStoreCustomPostgreSQL.this.deleteAccessTokenSql, token);
                 return null;
             }
         }

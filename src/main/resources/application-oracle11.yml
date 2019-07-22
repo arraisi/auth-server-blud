@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    url: jdbc:oracle:thin:@${DATABASE_HOST:localhost}:${DATABASE_PORT:1521}:${DATABASE_SID:xe}
+    username: ${DATABASE_USER:auth}
+    password: ${DATABASE_PASSWORD:auth}
+  jpa:
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        enable_lazy_load_no_trans: true
+        id:
+          new_generator_mappings: false
+        current_session_context_class: org.springframework.orm.hibernate5.SpringSessionContext
+        globally_quoted_identifiers: true
+        temp:
+          use_jdbc_metadata_defaults: false
+  flyway:
+    encoding: UTF-8
+    enabled: false
+    baseline-on-migrate: false
+    locations: classpath:/db/migration/oracle11
+    schemas: auth
+    clean-disabled: true
+    clean-on-validation-error: true
+    connect-retries: 3
+  queries:
+    authentication: select USERNAME AS username, PASSWORD AS password, 1 as enabled from table(AUTH_AUTHENTICATION(?))
+    authorization: select USERNAME AS username, AUTHORITY as authority from table(AUTH_AUTHORIZATION(?))

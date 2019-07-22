@@ -22,7 +22,7 @@ public class WebApplication implements WebMvcConfigurer {
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/sign-in").setViewName("login-screen");
+        registry.addViewController("/app/sign-in").setViewName("login-screen");
     }
 
     @Override

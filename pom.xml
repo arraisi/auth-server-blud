@@ -23,6 +23,10 @@
             <id>repository.dimas-maryanto.com</id>
             <url>http://repository.dimas-maryanto.com:8081/repository/maven-public/</url>
         </repository>
+        <repository>
+            <id>tabeldata.ip-dynamic.com</id>
+            <url>http://tabeldata.ip-dynamic.com:8081/repository/maven-public/</url>
+        </repository>
     </repositories>
 
     <distributionManagement>
@@ -185,6 +189,11 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>ojdbc6</artifactId>
+            <version>11.2.0.4</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

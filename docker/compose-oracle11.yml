@@ -1,0 +1,20 @@
+version: '3.7'
+services:
+  oracle:
+    image: tabeldata.ip-dynamic.com:8088/oracle/database:11.2.0.2-xe
+    ports:
+      - 1522:1521
+      - 5500:8080
+    environment:
+      - ORACLE_PWD=oracleSysdba2018
+    shm_size: 1g
+    volumes:
+      - ./oracle/setup/:/u01/app/oracle/scripts/setup/
+      - ./oracle/startup:/u01/app/oracle/scripts/startup/
+      - oracle-data:/u01/app/oracle/oradata
+    networks:
+      - auth-server-network
+volumes:
+  oracle-data:
+networks:
+  auth-server-network:

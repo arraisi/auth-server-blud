@@ -5,7 +5,7 @@ import com.maryanto.dimas.plugins.web.commons.ui.datatables.DataTablesResponse;
 import com.maryanto.dimas.plugins.web.commons.ui.datatables.service.ServiceDataTablesPattern;
 import com.tabeldata.oauth.models.OauthAccessTokenExtended;
 import com.tabeldata.oauth.models.OauthAccessTokenHistory;
-import com.tabeldata.oauth.repository.JdbcTokenStoreCustomizer;
+import com.tabeldata.oauth.repository.JdbcTokenStoreCustom;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
@@ -15,7 +15,10 @@ import org.springframework.security.oauth2.common.exceptions.InvalidGrantExcepti
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.provider.*;
-import org.springframework.security.oauth2.provider.token.*;
+import org.springframework.security.oauth2.provider.token.AuthorizationServerTokenServices;
+import org.springframework.security.oauth2.provider.token.ConsumerTokenServices;
+import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
+import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -32,13 +35,13 @@ public class DefaultTokenService implements
     private int accessTokenValiditySeconds = 43200;
     private boolean supportRefreshToken = false;
     private boolean reuseRefreshToken = true;
-    private JdbcTokenStoreCustomizer tokenStore;
+    private JdbcTokenStoreCustom tokenStore;
     private ClientDetailsService clientDetailsService;
     private TokenEnhancer accessTokenEnhancer;
     private AuthenticationManager authenticationManager;
 
     public DefaultTokenService(
-            JdbcTokenStoreCustomizer tokenStore,
+            JdbcTokenStoreCustom tokenStore,
             ClientDetailsService clientDetailsService,
             TokenEnhancer tokenEnhancer,
             AuthenticationManager authManager) {
