@@ -11,11 +11,11 @@ values ('user', 'user', '$2a$11$LJjcUZkGsU1FV/WjWVuhu.R62ejtcL3C5L2zF/Fk29YmU.9Y
         0, 'migration', current_timestamp, null, null);
 
 insert into AUTH_ROLES (ID, NAME, DESCRIPTION)
-values (ROLES_SEQ.nextval, 'ROLE_PUBLIC', 'Public role');
+values (auth_roles_seq.nextval, 'ROLE_PUBLIC', 'Public role');
 insert into AUTH_ROLES (ID, NAME, DESCRIPTION)
-values (ROLES_SEQ.nextval, 'ROLE_CREATE_USER', 'Untuk membuat user');
+values (auth_roles_seq.nextval, 'ROLE_CREATE_USER', 'Untuk membuat user');
 insert into AUTH_ROLES (ID, NAME, DESCRIPTION)
-values (ROLES_SEQ.nextval, 'ROLE_VIEW_USER', 'Untuk melihat user');
+values (auth_roles_seq.nextval, 'ROLE_VIEW_USER', 'Untuk melihat user');
 
 insert into AUTH_PRIVILEGES(ID, NAME, DESCRIPTION, CREATED_BY, CREATED_DATE, LAST_UPDATE_BY, LAST_UPDATE_DATE)
 VALUES ('register-user', 'PRIVILEGE_REGISTER_USER', null, 'migration', current_timestamp, null, null);

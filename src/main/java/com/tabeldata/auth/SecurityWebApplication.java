@@ -63,7 +63,7 @@ public class SecurityWebApplication extends WebSecurityConfigurerAdapter {
         http.cors().disable()
                 .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
 
-        http.authorizeRequests()
+        http.antMatcher("/app/**").authorizeRequests()
                 .antMatchers("/oauth/**",
                         "/swagger-ui.html",
                         "/swagger-resources/**",
@@ -73,8 +73,8 @@ public class SecurityWebApplication extends WebSecurityConfigurerAdapter {
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
-                .loginProcessingUrl("/sign-in")
-                .loginPage("/sign-in")
+                .loginProcessingUrl("/app/sign-in")
+                .loginPage("/app/sign-in")
                 .passwordParameter("passwd")
                 .usernameParameter("user")
                 .defaultSuccessUrl("/app/home/default", true)

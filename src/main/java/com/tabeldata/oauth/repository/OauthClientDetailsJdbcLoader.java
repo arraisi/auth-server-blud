@@ -15,6 +15,7 @@ import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.ClientRegistrationException;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,11 +31,20 @@ public class OauthClientDetailsJdbcLoader implements ClientDetailsService {
     public ClientDetails loadClientByClientId(String clientId) throws ClientRegistrationException {
         OauthClientDetails client;
         try {
+            log.info("clientId: {}", clientId);
             client = this.service.findByClientId(clientId);
+            log.info("client detail 1: {}", client);
             client.setApplications(service.findApplicationByClientId(clientId));
+            log.info("client detail 2: {}", client);
             client.setOauthGrantTypes(service.findGrantTypeByClientId(clientId));
+            log.info("client detail 3: {}", client);
             client.setRedirectUrls(service.findRedirectUrlsByClientId(clientId));
+            log.info("client detail 3: {}", client);
             client.setOauthScopes(service.findScopeByClientId(clientId));
+            log.info("client detail: {}", client);
+        }catch (SQLException sqle){
+            log.error("something wrong!", sqle);
+            throw new UsernameNotFoundException("client_id not found!", sqle);
         } catch (EmptyResultDataAccessException erde) {
             log.error("username not found", erde);
             throw new UsernameNotFoundException("client_id not found!", erde);
@@ -48,6 +58,7 @@ public class OauthClientDetailsJdbcLoader implements ClientDetailsService {
 
         public OauthClientDetailsModel(OauthClientDetails client) {
             this.client = client;
+            log.info("client: {}", this.client);
         }
 
         @Override

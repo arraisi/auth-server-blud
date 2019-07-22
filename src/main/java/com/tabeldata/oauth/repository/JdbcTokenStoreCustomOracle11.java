@@ -42,52 +42,43 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
 
     private final static Logger console = LoggerFactory.getLogger(JdbcTokenStoreCustomPostgreSQL.class);
 
-    private String insertAccessTokenSql = "insert into oauth.access_token (token_id, token, auth_id, user_name, client_id, authentication, refresh_token, ip_address)\n" +
+    private String insertAccessTokenSql = "insert into oauth_access_token (token_id, token, auth_id, USERNAME, client_id, authentication, refresh_token, ip_address)\n" +
             "values (?, ?, ?, ?, ?, ?, ?, ?)";
-    private String selectAccessTokenSql = "select token_id, token\n" +
-            "from oauth.access_token\n" +
-            "where token_id = ?";
+    private String selectAccessTokenSql = "select token_id, token from oauth_access_token where token_id = ?";
     private String selectAccessTokenAuthenticationSql = "select token_id, authentication\n" +
-            "from oauth.access_token\n" +
+            "from oauth_access_token\n" +
             "where token_id = ?";
     private String selectAccessTokenFromAuthenticationSql = "select token_id, token\n" +
-            "from oauth.access_token\n" +
+            "from oauth_access_token\n" +
             "where auth_id = ?";
-    private String selectAccessTokensFromUserNameAndClientIdSql = "select token_id, token\n" +
-            "from oauth.access_token\n" +
-            "where user_name = ?\n" +
-            "  and client_id = ?";
-    private String selectAccessTokensFromUserNameSql = "select token_id, token\n" +
-            "from oauth.access_token\n" +
-            "where user_name = ?";
-    private String selectAccessTokensFromClientIdSql = "select token_id, token\n" +
-            "from oauth.access_token\n" +
-            "where client_id = ?";
-    private String deleteAccessTokenSql = "delete\n" +
-            "from oauth.access_token\n" +
-            "where token_id = ?";
-    private String insertRefreshTokenSql = "insert into oauth.refresh_token (token_id, token, authentication)\n" +
+    private String selectAccessTokensFromUserNameAndClientIdSql = "select token_id, token from oauth_access_token where USERNAME = ? and client_id = ?";
+    private String selectAccessTokensFromUserNameSql = "select token_id, token from oauth_access_token where USERNAME = ?";
+    private String selectAccessTokensFromClientIdSql = "select token_id, token from oauth_access_token where client_id = ?";
+    private String deleteAccessTokenSql = "delete from oauth_access_token where token_id = ?";
+    private String insertRefreshTokenSql = "insert into oauth_refresh_token (token_id, token, authentication)\n" +
             "values (?, ?, ?)";
     private String selectRefreshTokenSql = "select token_id, token\n" +
-            "from oauth.refresh_token\n" +
+            "from oauth_refresh_token\n" +
             "where token_id = ?";
     private String selectRefreshTokenAuthenticationSql = "select token_id, authentication\n" +
-            "from oauth.refresh_token\n" +
+            "from oauth_refresh_token\n" +
             "where token_id = ?";
     private String deleteRefreshTokenSql = "delete\n" +
-            "from oauth.refresh_token\n" +
+            "from oauth_refresh_token\n" +
             "where token_id = ?";
     private String deleteAccessTokenFromRefreshTokenSql = "delete\n" +
-            "from oauth.access_token\n" +
+            "from oauth_access_token\n" +
             "where refresh_token = ?";
-    private String insertHistoryAccessTokenSql = "insert into oauth.history_access_token (id, access_id, client_id, token, ip_address, user_name, login_at, is_logout, logout_at, logout_by)\n" +
-            "VALUES (uuid_generate_v4(), ?, ?, ?, ?, ?, now(), false, null, null)";
-    private String updateHistoryAccessTokenSql = "update oauth.history_access_token\n" +
-            "set is_logout = true,\n" +
-            "    logout_at = now(),\n" +
+    private String insertHistoryAccessTokenSql = "insert into oauth_history_access_token (id, access_id, client_id, token, ip_address, user_name, login_at, is_logout,\n" +
+            "                                        logout_at, logout_by)\n" +
+            "VALUES (sys_guid(), ?, ?, ?, ?, ?, current_timestamp, 0, null, null)";
+    private String updateHistoryAccessTokenSql = "update oauth_history_access_token\n" +
+            "set is_logout = 0,\n" +
+            "    logout_at = current_timestamp,\n" +
             "    logout_by = ?\n" +
             "where access_id = ?\n" +
-            "  and is_logout = false";
+            "  and is_logout = 0";
+
 
     private AuthenticationKeyGenerator authenticationKeyGenerator = new DefaultAuthenticationKeyGenerator();
     private final JdbcTemplate jdbcTemplate;
