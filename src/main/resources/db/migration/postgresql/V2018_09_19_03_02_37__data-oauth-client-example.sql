@@ -7,7 +7,10 @@ values
    ('sisappra-upload', 'sisappra-upload','$2y$11$PM3Zk67WlrJFE3Y4BSwDXOmYjazr9FeBEpgyTz04xyG9xW8ss2.Ai',true , 43200, 'migration' , now(), null ,null),
    ('sisappra-api', 'sisappra-api','$2y$11$kYR2qvVFNj3p6HxYvjHU7O7mg1yQvPidDBMvx/FO6h/EMp6bG0t6q',true , 43200, 'migration' , now(), null ,null),
    ('tabeldata-oauth2-resource-server', 'tabeldata-oauth2-resource-server','$2a$11$sIDwRPDQLMB5428zrzj//.zsCDk0S7l8BvxZTtrS2f77FuZj68XVu',true , 43200, 'migration' , now(), null ,null),
-   ('bblm-api', 'bblm-api','$2y$11$HSv5yvo93C9fj1Y/W3dfQOCT72YNbiitiIWEKQOyZZROOOXDWM9Pe',true , 43200, 'migration' , now(), null ,null);
+   ('bblm-api', 'bblm-api','$2y$11$HSv5yvo93C9fj1Y/W3dfQOCT72YNbiitiIWEKQOyZZROOOXDWM9Pe',true , 43200, 'migration' , now(), null ,null),
+   ('client-web', 'client-web','$2a$11$mxICjHNKWo0Mo9GlnEuPUencuKAK3Y01pm.G9uL7oKNTB7K7HeJB2',true , 86400,'migration' , now(), null ,null),
+   ('client-php', 'client-php','$2a$11$nxEZJckW.s1v.FeNynrbxeWIovWQjVHMoemmPf4T39BVWEdQEjgqq',true , 43200, 'migration' , now(), null ,null),
+   ('client-mobile', 'client-mobile','$2a$11$mn8F6t/8EKV/UvGHyBQAtektuOAaOtMGw4WokfAsRi.ISPzSJpDyS',true , 604800, 'migration' , now(), null ,null);
 
 insert into resource.applications (id, name, created_by, created_date, last_update_by, last_update_date)
 values ('example', 'example', 'migration', now(), null, null),
