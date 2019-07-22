@@ -4,7 +4,8 @@
 - remove package `com.tabeldata.controller`
 - remove package `com.tabeldata.endpoint`
 - remove docs folder `docs -> wiki`
-- add functionality multiple databases [oracle-11g, sql-server-2017-linux]
+- add dependency `ojdbc6.jar:11.2.0.4`
+- add functionality multiple databases [postgresql-9.6, oracle-11g]
 
 # `v1.0.3-release`
 
