@@ -34,6 +34,10 @@
             <id>repository.tabeldata.com</id>
             <url>http://tabeldata.ip-dynamic.com:8081/repository/maven-releases/</url>
         </repository>
+        <snapshotRepository>
+            <id>repository.tabeldata.com</id>
+            <url>http://tabeldata.ip-dynamic.com:8081/repository/maven-snapshots/</url>
+        </snapshotRepository>
     </distributionManagement>
 
     <properties>

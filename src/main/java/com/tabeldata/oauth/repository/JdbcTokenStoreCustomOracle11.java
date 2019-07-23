@@ -3,6 +3,7 @@ package com.tabeldata.oauth.repository;
 import com.maryanto.dimas.plugins.web.commons.ui.datatables.DataTablesRequest;
 import com.tabeldata.oauth.models.OauthAccessTokenExtended;
 import com.tabeldata.oauth.models.OauthAccessTokenHistory;
+import com.tabeldata.utils.QueryComparator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -441,57 +442,6 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
         return (OAuth2Authentication) SerializationUtils.deserialize(authentication);
     }
 
-    public void setInsertAccessTokenSql(String insertAccessTokenSql) {
-        this.insertAccessTokenSql = insertAccessTokenSql;
-    }
-
-    public void setSelectAccessTokenSql(String selectAccessTokenSql) {
-        this.selectAccessTokenSql = selectAccessTokenSql;
-    }
-
-    public void setDeleteAccessTokenSql(String deleteAccessTokenSql) {
-        this.deleteAccessTokenSql = deleteAccessTokenSql;
-    }
-
-    public void setInsertRefreshTokenSql(String insertRefreshTokenSql) {
-        this.insertRefreshTokenSql = insertRefreshTokenSql;
-    }
-
-    public void setSelectRefreshTokenSql(String selectRefreshTokenSql) {
-        this.selectRefreshTokenSql = selectRefreshTokenSql;
-    }
-
-    public void setDeleteRefreshTokenSql(String deleteRefreshTokenSql) {
-        this.deleteRefreshTokenSql = deleteRefreshTokenSql;
-    }
-
-    public void setSelectAccessTokenAuthenticationSql(String selectAccessTokenAuthenticationSql) {
-        this.selectAccessTokenAuthenticationSql = selectAccessTokenAuthenticationSql;
-    }
-
-    public void setSelectRefreshTokenAuthenticationSql(String selectRefreshTokenAuthenticationSql) {
-        this.selectRefreshTokenAuthenticationSql = selectRefreshTokenAuthenticationSql;
-    }
-
-    public void setSelectAccessTokenFromAuthenticationSql(String selectAccessTokenFromAuthenticationSql) {
-        this.selectAccessTokenFromAuthenticationSql = selectAccessTokenFromAuthenticationSql;
-    }
-
-    public void setDeleteAccessTokenFromRefreshTokenSql(String deleteAccessTokenFromRefreshTokenSql) {
-        this.deleteAccessTokenFromRefreshTokenSql = deleteAccessTokenFromRefreshTokenSql;
-    }
-
-    public void setSelectAccessTokensFromUserNameSql(String selectAccessTokensFromUserNameSql) {
-        this.selectAccessTokensFromUserNameSql = selectAccessTokensFromUserNameSql;
-    }
-
-    public void setSelectAccessTokensFromUserNameAndClientIdSql(String selectAccessTokensFromUserNameAndClientIdSql) {
-        this.selectAccessTokensFromUserNameAndClientIdSql = selectAccessTokensFromUserNameAndClientIdSql;
-    }
-
-    public void setSelectAccessTokensFromClientIdSql(String selectAccessTokensFromClientIdSql) {
-        this.selectAccessTokensFromClientIdSql = selectAccessTokensFromClientIdSql;
-    }
 
     /**
      * private String username;
@@ -506,62 +456,57 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
      */
     @Override
     public List<OauthAccessTokenExtended> datatables(DataTablesRequest<OauthAccessTokenExtended> params) {
+        //language=Oracle
+        String baseQuery = "select ROW_NUMBER() over (order by ROWNUM) as no,\n" +
+                "             AUTH_ID                             as authentication_id,\n" +
+                "             TOKEN_ID                            as token_id,\n" +
+                "             TOKEN                               as access_token,\n" +
+                "             USERNAME                            as username,\n" +
+                "             CLIENT_ID                           as client_id,\n" +
+                "             IP_ADDRESS                          as ip_address,\n" +
+                "             LOGIN_AT                            as login_time\n" +
+                "      from OAUTH_ACCESS_TOKEN oauth\n" +
+                "      where 1 = 1";
+
         MapSqlParameterSource map = new MapSqlParameterSource();
-        StringBuilder sb = new StringBuilder("select auth_id    as authentication_id,\n" +
-                "       token_id   as token_id,\n" +
-                "       token      as access_token,\n" +
-                "       user_name   as username,\n" +
-                "       client_id  as client_id,\n" +
-                "       ip_address as ip_address,\n" +
-                "       login_at   as login_time\n" +
-                "from oauth.access_token where 1=1 ");
-
-        OauthAccessTokenExtended value = params.getValue();
-        if (StringUtils.isNotBlank(value.getClientId())) {
-            sb.append(" and client_id like :clientId ");
-            map.addValue("clientId", new StringBuilder("%").append(value.getClientId()).append("%").toString());
-        }
-
-        if (StringUtils.isNotBlank(value.getUsername())) {
-            sb.append(" and user_name like :userName ");
-            map.addValue("userName", new StringBuilder("%").append(value.getUsername()).append("%").toString());
-        }
-
-        if (StringUtils.isNotBlank(value.getIpAddress())) {
-            sb.append(" and ip_address = :ipAddress ");
-            map.addValue("ipAddress", value.getIpAddress());
-        }
+        OauthAccessTokenExtendedQueryComparator queryComparator = new OauthAccessTokenExtendedQueryComparator(baseQuery, map);
+        StringBuilder stringBuilder = queryComparator.getQuery(params.getValue());
+        map = queryComparator.getParameters();
 
         if (params.getColOrder() != null) {
             switch (params.getColOrder().intValue()) {
                 case 0:
                     if (params.getColDir().equalsIgnoreCase("asc"))
-                        sb.append(" order by user_name asc ");
-                    else sb.append(" order by user_name desc ");
+                        stringBuilder.append(" order by USERNAME asc ");
+                    else stringBuilder.append(" order by USERNAME desc ");
                     break;
                 case 1:
                     if (params.getColDir().equalsIgnoreCase("asc"))
-                        sb.append(" order by client_id asc ");
-                    else sb.append(" order by client_id desc ");
+                        stringBuilder.append(" order by client_id asc ");
+                    else stringBuilder.append(" order by client_id desc ");
                     break;
                 case 2:
                     if (params.getColDir().equalsIgnoreCase("asc"))
-                        sb.append(" order by ip_address asc ");
-                    else sb.append(" order by ip_address desc ");
+                        stringBuilder.append(" order by ip_address asc ");
+                    else stringBuilder.append(" order by ip_address desc ");
                     break;
                 case 3:
                     if (params.getColDir().equalsIgnoreCase("asc"))
-                        sb.append(" order by login_time asc ");
-                    else sb.append(" order by login_time desc ");
+                        stringBuilder.append(" order by login_time asc ");
+                    else stringBuilder.append(" order by login_time desc ");
                     break;
             }
         }
 
-        sb.append(" limit :limit ").append(" offset :offset ");
+        String finalQuery = String.format("select * from (%s) where no between (:start + 1) and (:page * :limit)", stringBuilder.toString());
+        if (params.getStart() > 0)
+            map.addValue("page", params.getStart());
+        else
+            map.addValue("page", 1);
         map.addValue("limit", params.getLength());
-        map.addValue("offset", params.getStart());
+        map.addValue("start", params.getStart());
 
-        List<OauthAccessTokenExtended> list = this.namedJdbcTemplate.query(sb.toString(), map, (resultSet, i) -> {
+        List<OauthAccessTokenExtended> list = this.namedJdbcTemplate.query(finalQuery, map, (resultSet, i) -> {
             try {
                 OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomOracle11.this.deserializeAccessToken(resultSet.getBytes("access_token"));
                 return new OauthAccessTokenExtended(
@@ -583,31 +528,50 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
 
     @Override
     public Long datatables(OauthAccessTokenExtended value) {
-        StringBuilder sb = new StringBuilder("select count(*) as rows from oauth.access_token where 1=1 ");
+        //language=Oracle
+        String baseQuery = "select count(*) as value_row from oauth_access_token where 1=1";
         MapSqlParameterSource map = new MapSqlParameterSource();
+        OauthAccessTokenExtendedQueryComparator queryComparator = new OauthAccessTokenExtendedQueryComparator(baseQuery, map);
+        StringBuilder stringBuilder = queryComparator.getQuery(value);
+        map = queryComparator.getParameters();
 
-        if (StringUtils.isNotBlank(value.getClientId())) {
-            sb.append(" and client_id like :clientId ");
-            map.addValue("clientId", new StringBuilder("%").append(value.getClientId()).append("%").toString());
-        }
-
-        if (StringUtils.isNotBlank(value.getUsername())) {
-            sb.append(" and user_name like :userName ");
-            map.addValue("userName", new StringBuilder("%").append(value.getUsername()).append("%").toString());
-        }
-
-        if (StringUtils.isNotBlank(value.getIpAddress())) {
-            sb.append(" and ip_address = :ipAddress ");
-            map.addValue("ipAddress", value.getIpAddress());
-        }
-
-        Long row = this.namedJdbcTemplate.queryForObject(sb.toString(), map, new RowMapper<Long>() {
-            @Override
-            public Long mapRow(ResultSet resultSet, int i) throws SQLException {
-                return resultSet.getLong("rows");
-            }
-        });
+        Long row = this.namedJdbcTemplate.queryForObject(stringBuilder.toString(), map, (resultSet, i) -> resultSet.getLong("value_row"));
         return row;
+    }
+
+    private class OauthAccessTokenExtendedQueryComparator implements QueryComparator<OauthAccessTokenExtended> {
+
+        private StringBuilder stringBuilder;
+        private MapSqlParameterSource parameterSource;
+
+        public OauthAccessTokenExtendedQueryComparator(String baseQuery, MapSqlParameterSource parameterSource) {
+            this.stringBuilder = new StringBuilder(baseQuery);
+            this.parameterSource = parameterSource;
+        }
+
+        @Override
+        public StringBuilder getQuery(OauthAccessTokenExtended value) {
+            if (StringUtils.isNotBlank(value.getClientId())) {
+                stringBuilder.append(" and client_id like :clientId ");
+                parameterSource.addValue("clientId", new StringBuilder("%").append(value.getClientId()).append("%").toString());
+            }
+
+            if (StringUtils.isNotBlank(value.getUsername())) {
+                stringBuilder.append(" and username like :userName ");
+                parameterSource.addValue("userName", new StringBuilder("%").append(value.getUsername()).append("%").toString());
+            }
+
+            if (StringUtils.isNotBlank(value.getIpAddress())) {
+                stringBuilder.append(" and ip_address = :ipAddress ");
+                parameterSource.addValue("ipAddress", value.getIpAddress());
+            }
+            return this.stringBuilder;
+        }
+
+        @Override
+        public MapSqlParameterSource getParameters() {
+            return this.parameterSource;
+        }
     }
 
     /**
