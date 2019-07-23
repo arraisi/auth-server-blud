@@ -6,6 +6,7 @@
 - remove docs folder `docs -> wiki`
 - add dependency `ojdbc6.jar:11.2.0.4`
 - add functionality multiple databases [postgresql-9.6, oracle-11g]
+- add pagination using oracle 11g
 
 # `v1.0.3-release`
 
