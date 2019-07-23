@@ -3,6 +3,7 @@ spring:
     url: jdbc:oracle:thin:@${DATABASE_HOST:localhost}:${DATABASE_PORT:1521}:${DATABASE_SID:xe}
     username: ${DATABASE_USER:auth}
     password: ${DATABASE_PASSWORD:auth}
+    driver-class-name: oracle.jdbc.driver.OracleDriver
   jpa:
     generate-ddl: false
     hibernate:

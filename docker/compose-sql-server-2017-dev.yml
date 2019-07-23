@@ -7,8 +7,12 @@ services:
       - SA_PASSWORD=PasswordnyaSA2018
       - MSSQL_PID=Express
     ports:
-      - 1433:1433
+      - 1434:1433
+    volumes:
+      - sqlserver_data:/var/opt/mssql/
     networks:
       - auth-server-network
 networks:
   auth-server-network:
+volumes:
+  sqlserver_data:
