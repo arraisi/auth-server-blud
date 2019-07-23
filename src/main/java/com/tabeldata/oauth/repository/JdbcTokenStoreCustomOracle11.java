@@ -1,6 +1,7 @@
 package com.tabeldata.oauth.repository;
 
 import com.maryanto.dimas.plugins.web.commons.ui.datatables.DataTablesRequest;
+import com.maryanto.dimas.plugins.web.commons.ui.datatables.OrderingByColumns;
 import com.tabeldata.oauth.models.OauthAccessTokenExtended;
 import com.tabeldata.oauth.models.OauthAccessTokenHistory;
 import com.tabeldata.utils.Oracle11PagingLimitOffset;
@@ -474,30 +475,8 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
         StringBuilder stringBuilder = queryComparator.getQuery(params.getValue());
         map = queryComparator.getParameters();
 
-        if (params.getColOrder() != null) {
-            switch (params.getColOrder().intValue()) {
-                case 0:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        stringBuilder.append(" order by USERNAME asc ");
-                    else stringBuilder.append(" order by USERNAME desc ");
-                    break;
-                case 1:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        stringBuilder.append(" order by client_id asc ");
-                    else stringBuilder.append(" order by client_id desc ");
-                    break;
-                case 2:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        stringBuilder.append(" order by ip_address asc ");
-                    else stringBuilder.append(" order by ip_address desc ");
-                    break;
-                case 3:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        stringBuilder.append(" order by login_time asc ");
-                    else stringBuilder.append(" order by login_time desc ");
-                    break;
-            }
-        }
+        OrderingByColumns columns = new OrderingByColumns("USERNAME", "client_id", "ip_address", "login_time");
+        stringBuilder.append(columns.orderBy(params.getColDir(), params.getColOrder()));
 
         Oracle11PagingLimitOffset limitOffset = new Oracle11PagingLimitOffset(map);
         map = limitOffset.parameter(params.getStart(), params.getLength());

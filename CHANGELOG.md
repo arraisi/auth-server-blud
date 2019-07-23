@@ -7,6 +7,7 @@
 - add dependency `ojdbc6.jar:11.2.0.4`
 - add functionality multiple databases [postgresql-9.6, oracle-11g]
 - add pagination using oracle 11g
+- set `web-commons:2.0.0-relase` migrate to `web-commons:2.0.1-release`
 
 # `v1.0.3-release`
 

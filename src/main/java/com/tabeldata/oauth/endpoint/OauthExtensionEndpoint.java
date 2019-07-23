@@ -69,7 +69,7 @@ public class OauthExtensionEndpoint {
             @RequestParam(required = false, value = "draw", defaultValue = "0") Long draw,
             @RequestParam(required = false, value = "start", defaultValue = "0") Long start,
             @RequestParam(required = false, value = "length", defaultValue = "10") Long length,
-            @RequestParam(required = false, value = "order[0][column]", defaultValue = "0") Long iSortCol0,
+            @RequestParam(required = false, value = "order[0][column]", defaultValue = "1") Long iSortCol0,
             @RequestParam(required = false, value = "order[0][dir]", defaultValue = "asc") String sSortDir0,
             @RequestBody(required = false) OauthAccessTokenExtended oauth) {
         if (oauth == null) oauth = new OauthAccessTokenExtended();
