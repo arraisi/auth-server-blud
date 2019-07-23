@@ -3,6 +3,7 @@ package com.tabeldata.oauth.repository;
 import com.maryanto.dimas.plugins.web.commons.ui.datatables.DataTablesRequest;
 import com.tabeldata.oauth.models.OauthAccessTokenExtended;
 import com.tabeldata.oauth.models.OauthAccessTokenHistory;
+import com.tabeldata.utils.Oracle11PagingLimitOffset;
 import com.tabeldata.utils.QueryComparator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -498,13 +499,9 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
             }
         }
 
-        String finalQuery = String.format("select * from (%s) where no between (:start + 1) and (:page * :limit)", stringBuilder.toString());
-        if (params.getStart() > 0)
-            map.addValue("page", params.getStart());
-        else
-            map.addValue("page", 1);
-        map.addValue("limit", params.getLength());
-        map.addValue("start", params.getStart());
+        Oracle11PagingLimitOffset limitOffset = new Oracle11PagingLimitOffset(map);
+        map = limitOffset.parameter(params.getStart(), params.getLength());
+        String finalQuery = limitOffset.query(stringBuilder.toString(), "no");
 
         List<OauthAccessTokenExtended> list = this.namedJdbcTemplate.query(finalQuery, map, (resultSet, i) -> {
             try {
