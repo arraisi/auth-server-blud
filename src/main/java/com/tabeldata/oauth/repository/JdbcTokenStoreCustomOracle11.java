@@ -28,6 +28,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.util.Assert;
 
 import javax.sql.DataSource;
+import javax.validation.constraints.NotNull;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -475,7 +476,7 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
         StringBuilder stringBuilder = queryComparator.getQuery(params.getValue());
         map = queryComparator.getParameters();
 
-        OrderingByColumns columns = new OrderingByColumns("USERNAME", "client_id", "ip_address", "login_time");
+        OrderingByColumns columns = new OrderingByColumns("username", "client_id", "ip_address", "login_time");
         stringBuilder.append(columns.orderBy(params.getColDir(), params.getColOrder()));
 
         Oracle11PagingLimitOffset limitOffset = new Oracle11PagingLimitOffset(map);
@@ -567,11 +568,12 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
      * @return
      */
     public List<OauthAccessTokenHistory> historyByUserAndClientIdDatatables(
-            String username,
-            String clientId,
+            @NotNull String username,
+            @NotNull String clientId,
             DataTablesRequest<OauthAccessTokenHistory> params) {
         MapSqlParameterSource map = new MapSqlParameterSource();
-        StringBuilder queryBuilder = new StringBuilder("select access_id,\n" +
+        String baseQuery = "select ROW_NUMBER() over (order by ROWNUM) as no,\n" +
+                "       access_id,\n" +
                 "       token,\n" +
                 "       client_id,\n" +
                 "       ip_address,\n" +
@@ -580,89 +582,42 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
                 "       is_logout,\n" +
                 "       logout_at,\n" +
                 "       logout_by\n" +
-                "from oauth.history_access_token\n" +
+                "from oauth_history_access_token\n" +
                 "where 1 = 1\n" +
                 "  and client_id = :clientId\n" +
-                "  and user_name = :userName ");
+                "  and user_name = :userName ";
         map.addValue("clientId", clientId);
         map.addValue("userName", username);
+        OauthAccessTokenHistoryQueryCompare queryCompare = new OauthAccessTokenHistoryQueryCompare(baseQuery, map);
+        StringBuilder queryBuilder = queryCompare.getQuery(params.getValue());
+        map = queryCompare.getParameters();
 
-        OauthAccessTokenHistory value = params.getValue();
-        if (value.getLogout() != null) {
-            queryBuilder.append(" and is_logout = :isLogout ");
-            map.addValue("isLogout", value.getLogout());
-        }
+        OrderingByColumns columns = new OrderingByColumns("user_name", "client_id", "ip_address", "login_at", "is_logout", "logout_at", "logout_by");
+        queryBuilder.append(columns.orderBy(params.getColDir(), params.getColOrder()));
 
-        if (StringUtils.isNotBlank(value.getIpAddress())) {
-            queryBuilder.append(" and ip_address like :ipAddress ");
-            map.addValue("ipAddress", new StringBuilder("%").append(value.getIpAddress()).append("%").toString());
-        }
+        Oracle11PagingLimitOffset limitOffset = new Oracle11PagingLimitOffset(map);
+        map = limitOffset.parameter(params.getStart(), params.getLength());
+        String finalQuery = limitOffset.query(queryBuilder.toString(), "no");
 
-        if (params.getColOrder() != null) {
-            switch (params.getColOrder().intValue()) {
-                case 0:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by user_name asc ");
-                    else queryBuilder.append(" order by user_name desc ");
-                    break;
-                case 1:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by client_id asc ");
-                    else queryBuilder.append(" order by client_id desc ");
-                    break;
-                case 2:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by ip_address asc ");
-                    else queryBuilder.append(" order by ip_address desc ");
-                    break;
-                case 3:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by login_at asc ");
-                    else queryBuilder.append(" order by login_at desc ");
-                    break;
-                case 4:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by is_logout asc ");
-                    else queryBuilder.append(" order by is_logout desc ");
-                    break;
-                case 5:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by logout_at asc ");
-                    else queryBuilder.append(" order by logout_at desc ");
-                    break;
-                case 6:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by logout_by asc ");
-                    else queryBuilder.append(" order by logout_by desc ");
-                    break;
-            }
-        }
 
-        queryBuilder.append(" limit :limit ").append(" offset :offset ");
-        map.addValue("limit", params.getLength());
-        map.addValue("offset", params.getStart());
-
-        List<OauthAccessTokenHistory> list = this.namedJdbcTemplate.query(queryBuilder.toString(), map, new RowMapper<OauthAccessTokenHistory>() {
-            @Override
-            public OauthAccessTokenHistory mapRow(ResultSet resultSet, int i) throws SQLException {
-                try {
-                    OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomOracle11.this.deserializeAccessToken(resultSet.getBytes("token"));
-                    return new OauthAccessTokenHistory(
-                            resultSet.getString("user_name"),
-                            resultSet.getString("client_id"),
-                            resultSet.getString("ip_address"),
-                            oauth2AccessToken.getValue(),
-                            resultSet.getTimestamp("login_at"),
-                            new Timestamp(oauth2AccessToken.getExpiration().getTime()),
-                            resultSet.getBoolean("is_logout"),
-                            resultSet.getTimestamp("logout_at"),
-                            resultSet.getString("logout_by")
-                    );
-                } catch (IllegalArgumentException var5) {
-                    String token = resultSet.getString("access_id");
-                    JdbcTokenStoreCustomOracle11.this.jdbcTemplate.update(JdbcTokenStoreCustomOracle11.this.deleteAccessTokenSql, token);
-                    return null;
-                }
+        List<OauthAccessTokenHistory> list = this.namedJdbcTemplate.query(finalQuery, map, (resultSet, i) -> {
+            try {
+                OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomOracle11.this.deserializeAccessToken(resultSet.getBytes("token"));
+                return new OauthAccessTokenHistory(
+                        resultSet.getString("user_name"),
+                        resultSet.getString("client_id"),
+                        resultSet.getString("ip_address"),
+                        oauth2AccessToken.getValue(),
+                        resultSet.getTimestamp("login_at"),
+                        new Timestamp(oauth2AccessToken.getExpiration().getTime()),
+                        resultSet.getBoolean("is_logout"),
+                        resultSet.getTimestamp("logout_at"),
+                        resultSet.getString("logout_by")
+                );
+            } catch (IllegalArgumentException var5) {
+                String token = resultSet.getString("access_id");
+                JdbcTokenStoreCustomOracle11.this.jdbcTemplate.update(JdbcTokenStoreCustomOracle11.this.deleteAccessTokenSql, token);
+                return null;
             }
         });
         return list;
@@ -670,32 +625,53 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
     }
 
     public Long historyByUsernameAndClientIdDatatables(String username, String clientId, OauthAccessTokenHistory param) {
-        MapSqlParameterSource map = new MapSqlParameterSource();
-        StringBuilder queryBuilder = new StringBuilder("select count(*) as rows\n" +
-                "from oauth.history_access_token\n" +
+        String baseQuery = "select count(*) as rows_value\n" +
+                "from oauth_history_access_token\n" +
                 "where 1 = 1 \n" +
                 "  and client_id = :clientId\n " +
-                "  and user_name = :userName ");
+                "  and user_name = :userName ";
+        MapSqlParameterSource map = new MapSqlParameterSource();
         map.addValue("clientId", clientId);
         map.addValue("userName", username);
 
-        if (param.getLogout() != null) {
-            queryBuilder.append(" and is_logout = :isLogout ");
-            map.addValue("isLogout", param.getLogout());
-        }
 
-        if (StringUtils.isNotBlank(param.getIpAddress())) {
-            queryBuilder.append(" and ip_address like :ipAddress ");
-            map.addValue("ipAddress", new StringBuilder("%").append(param.getIpAddress()).append("%").toString());
-        }
+        OauthAccessTokenHistoryQueryCompare queryCompare = new OauthAccessTokenHistoryQueryCompare(baseQuery, map);
+        StringBuilder queryBuilder = queryCompare.getQuery(param);
+        map = queryCompare.getParameters();
 
-        Long row = this.namedJdbcTemplate.queryForObject(queryBuilder.toString(), map, new RowMapper<Long>() {
-            @Override
-            public Long mapRow(ResultSet resultSet, int i) throws SQLException {
-                return resultSet.getLong("rows");
-            }
-        });
+        Long row = this.namedJdbcTemplate.queryForObject(queryBuilder.toString(), map, (resultSet, i) -> resultSet.getLong("rows_value"));
         return row;
+    }
+
+    private class OauthAccessTokenHistoryQueryCompare implements QueryComparator<OauthAccessTokenHistory> {
+
+        private StringBuilder queryBuilder;
+        private MapSqlParameterSource parameterSource;
+
+        public OauthAccessTokenHistoryQueryCompare(String baseQuery, MapSqlParameterSource parameterSource) {
+            this.queryBuilder = new StringBuilder(baseQuery);
+            this.parameterSource = parameterSource;
+        }
+
+        @Override
+        public StringBuilder getQuery(OauthAccessTokenHistory params) {
+            if (params.getLogout() != null) {
+                queryBuilder.append(" and is_logout = :isLogout ");
+                this.parameterSource.addValue("isLogout", params.getLogout());
+            }
+
+            if (StringUtils.isNotBlank(params.getIpAddress())) {
+                queryBuilder.append(" and ip_address like :ipAddress ");
+                this.parameterSource.addValue("ipAddress", new StringBuilder("%").append(params.getIpAddress()).append("%").toString());
+            }
+
+            return this.queryBuilder;
+        }
+
+        @Override
+        public MapSqlParameterSource getParameters() {
+            return this.parameterSource;
+        }
     }
 
     /**
@@ -717,7 +693,9 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
             String username,
             DataTablesRequest<OauthAccessTokenHistory> params) {
         MapSqlParameterSource map = new MapSqlParameterSource();
-        StringBuilder queryBuilder = new StringBuilder("select access_id,\n" +
+        //language=Oracle
+        String baseQuery = "select ROW_NUMBER() over (order by ROWNUM) as no,\n" +
+                "       access_id,\n" +
                 "       token,\n" +
                 "       client_id,\n" +
                 "       ip_address,\n" +
@@ -726,92 +704,40 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
                 "       is_logout,\n" +
                 "       logout_at,\n" +
                 "       logout_by\n" +
-                "from oauth.history_access_token\n" +
+                "from oauth_history_access_token\n" +
                 "where 1 = 1\n" +
-                "  and user_name = :userName ");
+                "  and user_name = :userName ";
         map.addValue("userName", username);
 
-        OauthAccessTokenHistory value = params.getValue();
-        if (value.getLogout() != null) {
-            queryBuilder.append(" and is_logout = :isLogout ");
-            map.addValue("isLogout", value.getLogout());
-        }
+        OauthAccessTokenHistoryQueryComparatorByUsername queryComparator = new OauthAccessTokenHistoryQueryComparatorByUsername(baseQuery, map);
+        StringBuilder queryBuilder = queryComparator.getQuery(params.getValue());
+        map = queryComparator.getParameters();
 
-        if (StringUtils.isNotBlank(value.getClientId())) {
-            queryBuilder.append(" and client_id like :clintId ");
-            map.addValue("clintId", new StringBuilder("%").append(value.getClientId()).append("%").toString());
-        }
+        OrderingByColumns columns = new OrderingByColumns("user_name", "client_id", "ip_address", "login_at", "is_logout", "is_logout", "logout_at", "logout_by");
+        queryBuilder.append(columns.orderBy(params.getColDir(), params.getColOrder()));
 
-        if (StringUtils.isNotBlank(value.getIpAddress())) {
-            queryBuilder.append(" and ip_address like :ipAddress ");
-            map.addValue("ipAddress", new StringBuilder("%").append(value.getIpAddress()).append("%").toString());
-        }
+        Oracle11PagingLimitOffset limitOffset = new Oracle11PagingLimitOffset(map);
+        map = limitOffset.parameter(params.getStart(), params.getLength());
+        String finalQuery = limitOffset.query(queryBuilder.toString(), "no");
 
-        if (params.getColOrder() != null) {
-            switch (params.getColOrder().intValue()) {
-                case 0:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by user_name asc ");
-                    else queryBuilder.append(" order by user_name desc ");
-                    break;
-                case 1:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by client_id asc ");
-                    else queryBuilder.append(" order by client_id desc ");
-                    break;
-                case 2:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by ip_address asc ");
-                    else queryBuilder.append(" order by ip_address desc ");
-                    break;
-                case 3:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by login_at asc ");
-                    else queryBuilder.append(" order by login_at desc ");
-                    break;
-                case 4:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by is_logout asc ");
-                    else queryBuilder.append(" order by is_logout desc ");
-                    break;
-                case 5:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by logout_at asc ");
-                    else queryBuilder.append(" order by logout_at desc ");
-                    break;
-                case 6:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by logout_by asc ");
-                    else queryBuilder.append(" order by logout_by desc ");
-                    break;
-            }
-        }
-
-        queryBuilder.append(" limit :limit ").append(" offset :offset ");
-        map.addValue("limit", params.getLength());
-        map.addValue("offset", params.getStart());
-
-        List<OauthAccessTokenHistory> list = this.namedJdbcTemplate.query(queryBuilder.toString(), map, new RowMapper<OauthAccessTokenHistory>() {
-            @Override
-            public OauthAccessTokenHistory mapRow(ResultSet resultSet, int i) throws SQLException {
-                try {
-                    OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomOracle11.this.deserializeAccessToken(resultSet.getBytes("token"));
-                    return new OauthAccessTokenHistory(
-                            resultSet.getString("user_name"),
-                            resultSet.getString("client_id"),
-                            resultSet.getString("ip_address"),
-                            oauth2AccessToken.getValue(),
-                            resultSet.getTimestamp("login_at"),
-                            new Timestamp(oauth2AccessToken.getExpiration().getTime()),
-                            resultSet.getBoolean("is_logout"),
-                            resultSet.getTimestamp("logout_at"),
-                            resultSet.getString("logout_by")
-                    );
-                } catch (IllegalArgumentException var5) {
-                    String token = resultSet.getString("access_id");
-                    JdbcTokenStoreCustomOracle11.this.jdbcTemplate.update(JdbcTokenStoreCustomOracle11.this.deleteAccessTokenSql, token);
-                    return null;
-                }
+        List<OauthAccessTokenHistory> list = this.namedJdbcTemplate.query(finalQuery, map, (resultSet, i) -> {
+            try {
+                OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomOracle11.this.deserializeAccessToken(resultSet.getBytes("token"));
+                return new OauthAccessTokenHistory(
+                        resultSet.getString("user_name"),
+                        resultSet.getString("client_id"),
+                        resultSet.getString("ip_address"),
+                        oauth2AccessToken.getValue(),
+                        resultSet.getTimestamp("login_at"),
+                        new Timestamp(oauth2AccessToken.getExpiration().getTime()),
+                        resultSet.getBoolean("is_logout"),
+                        resultSet.getTimestamp("logout_at"),
+                        resultSet.getString("logout_by")
+                );
+            } catch (IllegalArgumentException var5) {
+                String token = resultSet.getString("access_id");
+                JdbcTokenStoreCustomOracle11.this.jdbcTemplate.update(JdbcTokenStoreCustomOracle11.this.deleteAccessTokenSql, token);
+                return null;
             }
         });
         return list;
@@ -820,36 +746,55 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
 
     public Long historyByUsernameDatatables(String username, OauthAccessTokenHistory param) {
         MapSqlParameterSource map = new MapSqlParameterSource();
-        StringBuilder queryBuilder = new StringBuilder("select count(*) as rows\n" +
-                "from oauth.history_access_token\n" +
-                "where 1 = 1 \n" +
-                "  and user_name = :userName ");
+        //language=Oracle
+        String baseQuery = "select count(*) as rows_value\n" +
+                "from oauth_history_access_token\n" +
+                "where 1 = 1\n" +
+                "  and user_name = :userName ";
         map.addValue("userName", username);
+        OauthAccessTokenHistoryQueryComparatorByUsername queryComparator = new OauthAccessTokenHistoryQueryComparatorByUsername(baseQuery, map);
+        StringBuilder queryBuilder = queryComparator.getQuery(param);
+        map = queryComparator.getParameters();
 
-        if (param.getLogout() != null) {
-            queryBuilder.append(" and is_logout = :isLogout ");
-            map.addValue("isLogout", param.getLogout());
-        }
-
-        if (StringUtils.isNotBlank(param.getClientId())) {
-            queryBuilder.append(" and client_id like :clintId ");
-            map.addValue("clintId", new StringBuilder("%").append(param.getClientId()).append("%").toString());
-        }
-
-        if (StringUtils.isNotBlank(param.getIpAddress())) {
-            queryBuilder.append(" and ip_address like :ipAddress ");
-            map.addValue("ipAddress", new StringBuilder("%").append(param.getIpAddress()).append("%").toString());
-        }
-
-        Long row = this.namedJdbcTemplate.queryForObject(queryBuilder.toString(), map, new RowMapper<Long>() {
-            @Override
-            public Long mapRow(ResultSet resultSet, int i) throws SQLException {
-                return resultSet.getLong("rows");
-            }
-        });
+        Long row = this.namedJdbcTemplate.queryForObject(queryBuilder.toString(), map, (resultSet, i) -> resultSet.getLong("rows_value"));
         return row;
     }
 
+    public class OauthAccessTokenHistoryQueryComparatorByUsername implements QueryComparator<OauthAccessTokenHistory> {
+
+        private StringBuilder queryBuilder;
+        private MapSqlParameterSource parameterSource;
+
+        public OauthAccessTokenHistoryQueryComparatorByUsername(String baseQuery, MapSqlParameterSource parameterSource) {
+            this.queryBuilder = new StringBuilder(baseQuery);
+            this.parameterSource = parameterSource;
+        }
+
+        @Override
+        public StringBuilder getQuery(OauthAccessTokenHistory param) {
+
+            if (param.getLogout() != null) {
+                queryBuilder.append(" and is_logout = :isLogout ");
+                parameterSource.addValue("isLogout", param.getLogout());
+            }
+
+            if (StringUtils.isNotBlank(param.getClientId())) {
+                queryBuilder.append(" and client_id like :clintId ");
+                parameterSource.addValue("clintId", new StringBuilder("%").append(param.getClientId()).append("%").toString());
+            }
+
+            if (StringUtils.isNotBlank(param.getIpAddress())) {
+                queryBuilder.append(" and ip_address like :ipAddress ");
+                parameterSource.addValue("ipAddress", new StringBuilder("%").append(param.getIpAddress()).append("%").toString());
+            }
+            return this.queryBuilder;
+        }
+
+        @Override
+        public MapSqlParameterSource getParameters() {
+            return this.parameterSource;
+        }
+    }
 
     /**
      * private String username;
@@ -866,6 +811,7 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
      * @param params
      * @return
      */
+    @Deprecated
     public List<OauthAccessTokenHistory> historyByClientIdDatatables(
             String clientId,
             DataTablesRequest<OauthAccessTokenHistory> params) {
@@ -971,6 +917,7 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
 
     }
 
+    @Deprecated
     public Long historyByClientIdDatatables(String clientId, OauthAccessTokenHistory param) {
         MapSqlParameterSource map = new MapSqlParameterSource();
         StringBuilder queryBuilder = new StringBuilder("select count(*) as rows\n" +

@@ -85,8 +85,8 @@ public class OauthExtensionEndpoint {
             @RequestParam(required = false, value = "length", defaultValue = "10") Long length,
             @RequestParam(required = false, value = "order[0][column]", defaultValue = "0") Long iSortCol0,
             @RequestParam(required = false, value = "order[0][dir]", defaultValue = "asc") String sSortDir0,
-            @RequestParam(value = "userName", defaultValue = "asc") String username,
-            @RequestParam(value = "clientId", defaultValue = "asc") String clientId,
+            @RequestParam(value = "userName", required = true) String username,
+            @RequestParam(value = "clientId", required = true) String clientId,
             @RequestBody(required = false) OauthAccessTokenHistory oauth) {
         if (oauth == null) oauth = new OauthAccessTokenHistory();
         log.info("draw: {}, start: {}, length: {}, type: {}", draw, start, length, oauth);
