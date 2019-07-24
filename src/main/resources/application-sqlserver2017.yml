@@ -33,6 +33,5 @@ spring:
     clean-on-validation-error: true
     connect-retries: 3
   queries:
-    authentication: select * from auth.authentication(?)
-    authorization: select * from auth.authorization(?)
-
+    authentication: select * from Auth.AuthenticationByUser(?)
+    authorization: select * from Auth.AuthorizationByUser(?)
