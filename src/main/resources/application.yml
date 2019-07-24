@@ -23,7 +23,7 @@ spring:
     check-template-location: true
     template-resolver-order: 0
   profiles:
-    active: sqlserver2017
+    active: postgresql
 logging:
   level:
     org.springframework: ERROR
