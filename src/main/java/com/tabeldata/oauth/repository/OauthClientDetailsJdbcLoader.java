@@ -2,7 +2,6 @@ package com.tabeldata.oauth.repository;
 
 import com.tabeldata.oauth.models.OauthApplication;
 import com.tabeldata.oauth.models.OauthClientDetails;
-import com.tabeldata.oauth.models.OauthGrantType;
 import com.tabeldata.oauth.models.OauthScope;
 import com.tabeldata.oauth.service.OauthClientDetailsService;
 import lombok.extern.slf4j.Slf4j;
@@ -31,13 +30,11 @@ public class OauthClientDetailsJdbcLoader implements ClientDetailsService {
     public ClientDetails loadClientByClientId(String clientId) throws ClientRegistrationException {
         OauthClientDetails client;
         try {
-            log.info("clientId: {}", clientId);
             client = this.service.findByClientId(clientId);
             client.setApplications(service.findApplicationByClientId(clientId));
             client.setOauthGrantTypes(service.findGrantTypeByClientId(clientId));
             client.setRedirectUrls(service.findRedirectUrlsByClientId(clientId));
             client.setOauthScopes(service.findScopeByClientId(clientId));
-            log.info("client detail: {}", client);
         } catch (SQLException sqle) {
             log.error("something wrong!", sqle);
             throw new UsernameNotFoundException("client_id not found!", sqle);
@@ -54,7 +51,6 @@ public class OauthClientDetailsJdbcLoader implements ClientDetailsService {
 
         public OauthClientDetailsModel(OauthClientDetails client) {
             this.client = client;
-            log.info("client: {}", this.client);
         }
 
         @Override
@@ -97,9 +93,10 @@ public class OauthClientDetailsJdbcLoader implements ClientDetailsService {
 
         @Override
         public Set<String> getAuthorizedGrantTypes() {
-            return this.client.getOauthGrantTypes().stream()
-                    .map(OauthGrantType::getName)
-                    .collect(Collectors.toSet());
+//            return this.client.getOauthGrantTypes().stream()
+//                    .map(OauthGrantType::getName)
+//                    .collect(Collectors.toSet());
+            return new HashSet<>(Arrays.asList("password", "authorization_code"));
         }
 
         @Override

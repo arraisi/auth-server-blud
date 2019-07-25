@@ -31,6 +31,7 @@ public class OauthClientDetailsRepositoryPostgreSQL implements OauthClientDetail
     public List<OauthApplication> getApplicationByClientId(String clientId) throws SQLException {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("clientName", clientId);
+        //language=PostgreSQL
         StringBuilder query = new StringBuilder("select client_app.id               as application_id,\n" +
                 "       client_app.name             as application_name,\n" +
                 "       client_app.created_by       as created_by,\n" +
@@ -62,6 +63,7 @@ public class OauthClientDetailsRepositoryPostgreSQL implements OauthClientDetail
     public List<OauthGrantType> getGrantTypeByClientId(String clientId) throws SQLException {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("clientId", clientId);
+        //language=PostgreSQL
         StringBuilder query = new StringBuilder("select grant_type.id as grant_id, grant_type.name as grant_name, grant_type.description as grant_description\n" +
                 "from oauth.grant_types grant_type\n" +
                 "       join resource.client_detail_grant_types res_grant_type on grant_type.id = res_grant_type.grant_type\n" +
@@ -78,6 +80,7 @@ public class OauthClientDetailsRepositoryPostgreSQL implements OauthClientDetail
     public List<String> getRedirectUrlsByClientId(String clientId) throws SQLException {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("clientId", clientId);
+        //language=PostgreSQL
         StringBuilder query = new StringBuilder("select url.id as url_id, url.redirect_uri as redirect_uri\n" +
                 "from resource.client_detail_redirect_uris url\n" +
                 "       join resource.client_details app on url.client_id = app.id\n" +
@@ -88,6 +91,7 @@ public class OauthClientDetailsRepositoryPostgreSQL implements OauthClientDetail
     public List<OauthScope> getScopesByClientId(String clientId) throws SQLException {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("clientId", clientId);
+        //language=PostgreSQL
         StringBuilder query = new StringBuilder("select scope.id               as scope_id,\n" +
                 "       scope.name             as scope_name,\n" +
                 "       scope.created_by       as created_by,\n" +
@@ -111,6 +115,7 @@ public class OauthClientDetailsRepositoryPostgreSQL implements OauthClientDetail
     public OauthClientDetails getResourceByClientId(String clientId) throws EmptyResultDataAccessException, SQLException {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("clientId", clientId);
+        //language=PostgreSQL
         StringBuilder query = new StringBuilder("select id,\n" +
                 "       name,\n" +
                 "       password,\n" +
