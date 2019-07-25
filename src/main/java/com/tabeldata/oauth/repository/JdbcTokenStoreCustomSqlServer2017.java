@@ -7,13 +7,11 @@ import com.tabeldata.oauth.models.OauthAccessTokenHistory;
 import com.tabeldata.utils.QueryComparator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.annotation.Profile;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.core.support.SqlLobValue;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
@@ -24,7 +22,6 @@ import org.springframework.security.oauth2.provider.token.AuthenticationKeyGener
 import org.springframework.security.oauth2.provider.token.DefaultAuthenticationKeyGenerator;
 import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
-import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 
 import javax.sql.DataSource;
@@ -42,70 +39,40 @@ import java.util.Iterator;
 import java.util.List;
 
 @Slf4j
-@Repository
-@Profile("sqlserver2017")
 public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements JdbcTokenStoreCustom {
     //language=TSQL
-    private String insertAccessTokenSql = "insert into Oauth.AccessToken (TokenId, Token, AuthId, Username, ClientId, Authentication, RefreshToken, IpAddress)\n" +
+    private String insertAccessTokenSql = "insert into OAuth.AccessToken (TokenId, Token, AuthId, Username, ClientId, Authentication, RefreshToken, IpAddress)\n" +
             "values (?, ?, ?, ?, ?, ?, ?, ?)";
     //language=TSQL
-    private String selectAccessTokenSql = "select TokenId as token_id, Token as token\n" +
-            "from Oauth.AccessToken\n" +
-            "where TokenId = ?";
+    private String selectAccessTokenSql = "select TokenId, Token from OAuth.AccessToken where TokenId = ?";
     //language=TSQL
-    private String selectAccessTokenAuthenticationSql = "select TokenId as token_id, Authentication\n" +
-            "from Oauth.AccessToken\n" +
-            "where TokenId = ?";
+    private String selectAccessTokenAuthenticationSql = "select TokenId, Authentication from OAuth.AccessToken where TokenId = ?";
     //language=TSQL
-    private String selectAccessTokenFromAuthenticationSql = "select TokenId as token_id, Token as token\n" +
-            "from OAuth.AccessToken\n" +
-            "where AuthId = ?";
+    private String selectAccessTokenFromAuthenticationSql = "select TokenId, Token from OAuth.AccessToken where AuthId = ?";
     //language=TSQL
-    private String selectAccessTokensFromUserNameAndClientIdSql = "select TokenId as token_id, Token as token\n" +
-            "from OAuth.AccessToken\n" +
-            "where Username = ?\n" +
-            "  and ClientId = ?";
+    private String selectAccessTokensFromUserNameAndClientIdSql = "select TokenId, Token from OAuth.AccessToken where Username = ? and ClientId = ?";
     //language=TSQL
-    private String selectAccessTokensFromUserNameSql = "select TokenId as token_id, Token as token\n" +
-            "from OAuth.AccessToken\n" +
-            "where Username = ?";
+    private String selectAccessTokensFromUserNameSql = "select TokenId, Token from OAuth.AccessToken where Username = ?";
     //language=TSQL
-    private String selectAccessTokensFromClientIdSql = "select TokenId as token_id, Token as token\n" +
-            "from OAuth.AccessToken\n" +
-            "where ClientId = ?";
+    private String selectAccessTokensFromClientIdSql = "select TokenId, Token from OAuth.AccessToken where ClientId = ?";
     //language=TSQL
-    private String deleteAccessTokenSql = "delete\n" +
-            "from OAuth.AccessToken\n" +
-            "where TokenId = ?";
+    private String deleteAccessTokenSql = "delete from OAuth.AccessToken where TokenId = ?";
     //language=TSQL
-    private String insertRefreshTokenSql = "insert into OAuth.RefreshToken (TokenId, Token, Authentication)\n" +
-            "values (?, ?, ?)";
+    private String insertRefreshTokenSql = "insert into OAuth.RefreshToken (TokenId, Token, Authentication) values (?, ?, ?)";
     //language=TSQL
-    private String selectRefreshTokenSql = "select TokenId as token_id, Token\n" +
-            "from OAuth.RefreshToken\n" +
-            "where TokenId = ?";
+    private String selectRefreshTokenSql = "select TokenId, Token from OAuth.RefreshToken where TokenId = ?";
     //language=TSQL
-    private String selectRefreshTokenAuthenticationSql = "select TokenId as token_id, Authentication as authentication\n" +
-            "from OAuth.RefreshToken\n" +
-            "where TokenId = ?";
+    private String selectRefreshTokenAuthenticationSql = "select TokenId, Authentication from OAuth.RefreshToken where TokenId = ?";
+    ///language=TSQL
+    private String deleteRefreshTokenSql = "delete from OAuth.RefreshToken where TokenId = ?";
     //language=TSQL
-    private String deleteRefreshTokenSql = "delete\n" +
-            "from OAuth.RefreshToken\n" +
-            "where TokenId = ?";
-    //language=TSQL
-    private String deleteAccessTokenFromRefreshTokenSql = "delete\n" +
-            "from OAuth.AccessToken\n" +
-            "where RefreshToken = ?";
+    private String deleteAccessTokenFromRefreshTokenSql = "delete from OAuth.AccessToken where RefreshToken = ?";
     //language=TSQL
     private String insertHistoryAccessTokenSql = "insert into OAuth.HistoryAccessToken (Id, AccessId, ClientId, Token, IpAddress, Username, LoginAt, IsLogout, LoginAt, LogoutBy)\n" +
             "VALUES (newid(), ?, ?, ?, ?, ?, current_timestamp, false, null, null)";
     //language=TSQL
-    private String updateHistoryAccessTokenSql = "update OAuth.HistoryAccessToken\n" +
-            "set IsLogout = true,\n" +
-            "    LoginAt = current_timestamp,\n" +
-            "    LogoutBy = ?\n" +
-            "where AccessId = ?\n" +
-            "  and IsLogout = 0";
+    private String updateHistoryAccessTokenSql = "update OAuth.HistoryAccessToken set IsLogout = true, LogoutBy = current_timestamp, LogoutBy = ?\n" +
+            "where AccessId = ? and IsLogout = 0";
 
     private AuthenticationKeyGenerator authenticationKeyGenerator = new DefaultAuthenticationKeyGenerator();
     private final JdbcTemplate jdbcTemplate;
@@ -139,10 +106,10 @@ public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements
                     key);
         } catch (EmptyResultDataAccessException var5) {
             if (log.isDebugEnabled()) {
-                log.debug("Failed to find access token for authentication " + authentication);
+                log.debug("Failed to find access token for authentication: {}", authentication);
             }
         } catch (IllegalArgumentException var6) {
-            log.error("Could not extract access token for authentication " + authentication, var6);
+            log.error("Could not extract access token for authentication : {}", authentication, var6);
         }
 
         if (accessToken != null && !key.equals(this.authenticationKeyGenerator.extractKey(this.readAuthentication(accessToken.getValue())))) {
@@ -169,19 +136,34 @@ public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements
         String username = authentication.isClientOnly() ? null : authentication.getName();
         String clientId = authentication.getOAuth2Request().getClientId();
 
-        SqlLobValue tokenLobValue = new SqlLobValue(this.serializeAccessToken(token));
+//        SqlLobValue tokenLobValue = new SqlLobValue(this.serializeAccessToken(token)); //fixme sql server not support
+//        SqlLobValue authLobValue = new SqlLobValue(this.serializeAuthentication(authentication)), //fixme sql server not supported
+        byte[] tokenLobValue = this.serializeAccessToken(token);
+        byte[] authLobValue = this.serializeAuthentication(authentication);
+        Object[] valueParameters = new Object[]{
+                tokenId,
+                tokenLobValue,
+                authId,
+                username,
+                clientId,
+                authLobValue,
+                this.extractTokenKey(refreshToken),
+                getRemoteAddress()
+        };
+
         this.jdbcTemplate.update(
                 this.insertAccessTokenSql,
-                new Object[]{
-                        tokenId,
-                        tokenLobValue,
-                        authId,
-                        username,
-                        clientId,
-                        new SqlLobValue(this.serializeAuthentication(authentication)),
-                        this.extractTokenKey(refreshToken),
-                        getRemoteAddress()
-                }, new int[]{Types.VARCHAR, Types.BLOB, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR, Types.BLOB, Types.VARCHAR, Types.VARCHAR});
+                valueParameters,
+                new int[]{
+                        Types.VARCHAR,
+                        Types.VARBINARY,
+                        Types.VARCHAR,
+                        Types.VARCHAR,
+                        Types.VARCHAR,
+                        Types.VARBINARY,
+                        Types.VARCHAR,
+                        Types.VARCHAR}
+        );
 
         this.jdbcTemplate.update(
                 this.insertHistoryAccessTokenSql,
@@ -191,7 +173,16 @@ public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements
                         tokenLobValue,
                         getRemoteAddress(),
                         username},
-                new int[]{Types.VARCHAR, Types.VARCHAR, Types.BLOB, Types.VARCHAR, Types.VARCHAR});
+                new int[]{
+                        Types.VARCHAR,
+                        Types.VARCHAR,
+                        Types.VARBINARY,
+                        Types.VARCHAR,
+                        Types.VARCHAR
+                }
+        );
+
+
     }
 
     @Override
@@ -205,10 +196,10 @@ public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements
                     this.extractTokenKey(tokenValue));
         } catch (EmptyResultDataAccessException var4) {
             if (log.isInfoEnabled()) {
-                log.info("Failed to find access token for token " + tokenValue);
+                log.info("Failed to find access token for token : {}", tokenValue);
             }
         } catch (IllegalArgumentException var5) {
-            log.warn("Failed to deserialize access token for " + tokenValue, var5);
+            log.warn("Failed to deserialize access token for: {} ", tokenValue, var5);
             this.removeAccessToken(tokenValue);
         }
 
@@ -267,10 +258,10 @@ public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements
                     this.extractTokenKey(token));
         } catch (EmptyResultDataAccessException var4) {
             if (log.isInfoEnabled()) {
-                log.info("Failed to find access token for token " + token);
+                log.info("Failed to find access token for token: {} ", token);
             }
         } catch (IllegalArgumentException var5) {
-            log.warn("Failed to deserialize authentication for " + token, var5);
+            log.warn("Failed to deserialize authentication for: {} ", token, var5);
             this.removeAccessToken(token);
         }
 
@@ -279,13 +270,15 @@ public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements
 
     @Override
     public void storeRefreshToken(OAuth2RefreshToken refreshToken, OAuth2Authentication authentication) {
+//        SqlLobValue tokenLobValue = new SqlLobValue(this.serializeRefreshToken(refreshToken)); //TODO sql server not support
+//        SqlLobValue authLobValue = new SqlLobValue(this.serializeAuthentication(authentication)), //TODO sql server not supported
+        byte[] tokenLobValue = this.serializeRefreshToken(refreshToken);
+        byte[] authLobValue = this.serializeAuthentication(authentication);
         this.jdbcTemplate.update(
                 this.insertRefreshTokenSql,
-                new Object[]{
-                        this.extractTokenKey(refreshToken.getValue()),
-                        new SqlLobValue(this.serializeRefreshToken(refreshToken)),
-                        new SqlLobValue(this.serializeAuthentication(authentication))},
-                new int[]{12, 2004, 2004});
+                new Object[]{this.extractTokenKey(refreshToken.getValue()), tokenLobValue, authLobValue},
+                new int[]{Types.VARCHAR, Types.VARBINARY, Types.VARBINARY}
+        );
     }
 
     @Override
@@ -299,10 +292,10 @@ public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements
                     this.extractTokenKey(token));
         } catch (EmptyResultDataAccessException var4) {
             if (log.isInfoEnabled()) {
-                log.info("Failed to find refresh token for token " + token);
+                log.info("Failed to find refresh token for token: {} ", token);
             }
         } catch (IllegalArgumentException var5) {
-            log.warn("Failed to deserialize refresh token for token " + token, var5);
+            log.warn("Failed to deserialize refresh token for token: {} ", token, var5);
             this.removeRefreshToken(token);
         }
 
@@ -335,10 +328,10 @@ public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements
                     this.extractTokenKey(value));
         } catch (EmptyResultDataAccessException var4) {
             if (log.isInfoEnabled()) {
-                log.info("Failed to find access token for token " + value);
+                log.info("Failed to find access token for token: {} ", value);
             }
         } catch (IllegalArgumentException var5) {
-            log.warn("Failed to deserialize access token for " + value, var5);
+            log.warn("Failed to deserialize access token for : {}", value, var5);
             this.removeRefreshToken(value);
         }
 
@@ -352,7 +345,10 @@ public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements
 
     @Override
     public void removeAccessTokenUsingRefreshToken(String refreshToken) {
-        this.jdbcTemplate.update(this.deleteAccessTokenFromRefreshTokenSql, new Object[]{this.extractTokenKey(refreshToken)}, new int[]{12});
+        this.jdbcTemplate.update(this.deleteAccessTokenFromRefreshTokenSql,
+                new Object[]{this.extractTokenKey(refreshToken)},
+                new int[]{Types.VARCHAR}
+        );
     }
 
     @Override
@@ -366,7 +362,7 @@ public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements
                     clientId);
         } catch (EmptyResultDataAccessException var4) {
             if (log.isInfoEnabled()) {
-                log.info("Failed to find access token for clientId " + clientId);
+                log.info("Failed to find access token for clientId: {} ", clientId);
             }
         }
 
@@ -384,7 +380,7 @@ public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements
                     userName);
         } catch (EmptyResultDataAccessException var4) {
             if (log.isInfoEnabled()) {
-                log.info("Failed to find access token for userName " + userName);
+                log.info("Failed to find access token for userName: {} ", userName);
             }
         }
 
@@ -402,7 +398,7 @@ public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements
                     userName, clientId);
         } catch (EmptyResultDataAccessException var5) {
             if (log.isInfoEnabled()) {
-                log.info("Failed to find access token for clientId " + clientId + " and userName " + userName);
+                log.info("Failed to find access token for clientId {} and userName {}", clientId, userName);
             }
         }
 

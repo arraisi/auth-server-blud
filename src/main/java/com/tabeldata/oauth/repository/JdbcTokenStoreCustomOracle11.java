@@ -6,6 +6,7 @@ import com.tabeldata.oauth.models.OauthAccessTokenExtended;
 import com.tabeldata.oauth.models.OauthAccessTokenHistory;
 import com.tabeldata.utils.Oracle11PagingLimitOffset;
 import com.tabeldata.utils.QueryComparator;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,40 +43,55 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+@Slf4j
 public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements JdbcTokenStoreCustom {
 
     private final static Logger console = LoggerFactory.getLogger(JdbcTokenStoreCustomPostgreSQL.class);
-
+    //language=OracleSqlPlus
     private String insertAccessTokenSql = "insert into oauth_access_token (token_id, token, auth_id, USERNAME, client_id, authentication, refresh_token, ip_address)\n" +
             "values (?, ?, ?, ?, ?, ?, ?, ?)";
+    //language=OracleSqlPlus
     private String selectAccessTokenSql = "select token_id, token from oauth_access_token where token_id = ?";
+    //language=OracleSqlPlus
     private String selectAccessTokenAuthenticationSql = "select token_id, authentication\n" +
             "from oauth_access_token\n" +
             "where token_id = ?";
+    //language=OracleSqlPlus
     private String selectAccessTokenFromAuthenticationSql = "select token_id, token\n" +
             "from oauth_access_token\n" +
             "where auth_id = ?";
+    //language=OracleSqlPlus
     private String selectAccessTokensFromUserNameAndClientIdSql = "select token_id, token from oauth_access_token where USERNAME = ? and client_id = ?";
+    //language=OracleSqlPlus
     private String selectAccessTokensFromUserNameSql = "select token_id, token from oauth_access_token where USERNAME = ?";
+    //language=OracleSqlPlus
     private String selectAccessTokensFromClientIdSql = "select token_id, token from oauth_access_token where client_id = ?";
+    //language=OracleSqlPlus
     private String deleteAccessTokenSql = "delete from oauth_access_token where token_id = ?";
+    //language=OracleSqlPlus
     private String insertRefreshTokenSql = "insert into oauth_refresh_token (token_id, token, authentication)\n" +
             "values (?, ?, ?)";
+    //language=OracleSqlPlus
     private String selectRefreshTokenSql = "select token_id, token\n" +
             "from oauth_refresh_token\n" +
             "where token_id = ?";
+    //language=OracleSqlPlus
     private String selectRefreshTokenAuthenticationSql = "select token_id, authentication\n" +
             "from oauth_refresh_token\n" +
             "where token_id = ?";
+    //language=OracleSqlPlus
     private String deleteRefreshTokenSql = "delete\n" +
             "from oauth_refresh_token\n" +
             "where token_id = ?";
+    //language=OracleSqlPlus
     private String deleteAccessTokenFromRefreshTokenSql = "delete\n" +
             "from oauth_access_token\n" +
             "where refresh_token = ?";
+    //language=OracleSqlPlus
     private String insertHistoryAccessTokenSql = "insert into oauth_history_access_token (id, access_id, client_id, token, ip_address, user_name, login_at, is_logout,\n" +
             "                                        logout_at, logout_by)\n" +
             "VALUES (sys_guid(), ?, ?, ?, ?, ?, current_timestamp, 0, null, null)";
+    //language=OracleSqlPlus
     private String updateHistoryAccessTokenSql = "update oauth_history_access_token\n" +
             "set is_logout = 0,\n" +
             "    logout_at = current_timestamp,\n" +
@@ -572,6 +588,7 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
             @NotNull String clientId,
             DataTablesRequest<OauthAccessTokenHistory> params) {
         MapSqlParameterSource map = new MapSqlParameterSource();
+        //language=OracleSqlPlus
         String baseQuery = "select ROW_NUMBER() over (order by ROWNUM) as no,\n" +
                 "       access_id,\n" +
                 "       token,\n" +
@@ -625,6 +642,7 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
     }
 
     public Long historyByUsernameAndClientIdDatatables(String username, String clientId, OauthAccessTokenHistory param) {
+        //language=OracleSqlPlus
         String baseQuery = "select count(*) as rows_value\n" +
                 "from oauth_history_access_token\n" +
                 "where 1 = 1 \n" +
@@ -868,6 +886,7 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
 
     public Long historyByClientIdDatatables(String clientId, OauthAccessTokenHistory param) {
         MapSqlParameterSource map = new MapSqlParameterSource();
+        //language=OracleSqlPlus
         String baseQuery = "select count(*) as rows_value\n" +
                 "from oauth_history_access_token\n" +
                 "where 1 = 1 \n" +

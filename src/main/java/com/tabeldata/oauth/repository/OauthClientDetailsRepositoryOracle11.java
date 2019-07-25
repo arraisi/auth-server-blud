@@ -26,6 +26,7 @@ public class OauthClientDetailsRepositoryOracle11 implements OauthClientDetailsR
     public List<OauthApplication> getApplicationByClientId(String clientId) throws SQLException {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("clientName", clientId);
+        //language=OracleSqlPlus
         StringBuilder query = new StringBuilder("select client_app.ID               as application_id,\n" +
                 "       client_app.NAME             as application_name,\n" +
                 "       client_app.CREATED_BY       as created_by,\n" +
@@ -58,6 +59,7 @@ public class OauthClientDetailsRepositoryOracle11 implements OauthClientDetailsR
     public List<OauthGrantType> getGrantTypeByClientId(String clientId) throws SQLException {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("clientId", clientId);
+        //language=OracleSqlPlus
         StringBuilder query = new StringBuilder("select GRANT_TYPE.id as grant_id, GRANT_TYPE.NAME as grant_name, GRANT_TYPE.DESCRIPTION as grant_description\n" +
                 "from OAUTH_GRANT_TYPES grant_type\n" +
                 "         join RESOURCE_CLIENT_GRANT_TYPES res_grant_type on grant_type.ID = res_grant_type.GRANT_TYPE\n" +
@@ -75,6 +77,7 @@ public class OauthClientDetailsRepositoryOracle11 implements OauthClientDetailsR
     public List<String> getRedirectUrlsByClientId(String clientId) throws SQLException {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("clientId", clientId);
+        //language=OracleSqlPlus
         StringBuilder query = new StringBuilder("select url.ID as url_id, url.REDIRECT_URI as redirect_uri\n" +
                 "from RESOURCE_CLIENT_REDIRECT_URI url\n" +
                 "         join RESOURCE_CLIENT_DETAILS client_detail on url.CLIENT_ID = client_detail.ID\n" +
@@ -87,6 +90,7 @@ public class OauthClientDetailsRepositoryOracle11 implements OauthClientDetailsR
 
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("clientId", clientId);
+        //language=OracleSqlPlus
         StringBuilder query = new StringBuilder("select scope.ID               as scope_id,\n" +
                 "       scope.NAME             as scope_name,\n" +
                 "       scope.CREATED_BY       as created_by,\n" +
@@ -111,6 +115,7 @@ public class OauthClientDetailsRepositoryOracle11 implements OauthClientDetailsR
     public OauthClientDetails getResourceByClientId(String clientId) throws EmptyResultDataAccessException, SQLException {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("clientId", clientId);
+        //language=OracleSqlPlus
         StringBuilder query = new StringBuilder("select ID                      as id,\n" +
                 "       NAME                    as name,\n" +
                 "       PASSWORD                as password,\n" +
