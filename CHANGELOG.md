@@ -1,10 +1,17 @@
+# `v1.0.5-release`
+
+- add `sql-server-2017` database profile
+
 # `v1.0.4-release`
 
 - list of menu request by module and roles
 - remove package `com.tabeldata.controller`
 - remove package `com.tabeldata.endpoint`
 - remove docs folder `docs -> wiki`
-- add functionality multiple databases [oracle-11g, sql-server-2017-linux]
+- add dependency `ojdbc6.jar:11.2.0.4`
+- add `oracle-11g` database profile
+- add pagination using oracle 11g
+- set `web-commons:2.0.0-relase` migrate to `web-commons:2.0.1-release`
 
 # `v1.0.3-release`
 

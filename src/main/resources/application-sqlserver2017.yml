@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:tabeldata_auth}
-    username: ${DATABASE_USER:tabeldata_auth}
-    password: ${DATABASE_PASSWORD:tabeldata_auth}
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:sqlserver://${DATABASE_HOST:localhost}:${DATABASE_PORT:1433};databaseName=${DATABASE_NAME:master}
+    username: ${DATABASE_USER:sa}
+    password: ${DATABASE_PASSWORD:PasswordnyaSA2018}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
   jpa:
     generate-ddl: false
     hibernate:
@@ -11,6 +11,9 @@ spring:
     show-sql: true
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.SQLServer2012Dialect
+        default_catalog: ${DATABASE_NAME:master}
+        default_schema: ${DATABASE_SCHEMA:default}
         format_sql: true
         enable_lazy_load_no_trans: true
         id:
@@ -19,12 +22,13 @@ spring:
         globally_quoted_identifiers: true
         temp:
           use_jdbc_metadata_defaults: false
+    database: sql_server
   flyway:
     encoding: UTF-8
     enabled: true
     baseline-on-migrate: true
-    locations: classpath:/db/migration/postgresql
-    schemas: public,oauth,auth,resource,component
+    locations: classpath:/db/migration/sqlserver-2017
+    schemas: default,oauth,auth,resource,component
     clean-disabled: false
     clean-on-validation-error: true
     connect-retries: 3
