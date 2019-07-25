@@ -1,5 +1,6 @@
 package com.tabeldata.auth;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +15,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
@@ -24,6 +24,7 @@ import javax.sql.DataSource;
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true, jsr250Enabled = true)
 @EnableGlobalAuthentication
+@Slf4j
 public class SecurityWebApplication extends WebSecurityConfigurerAdapter {
 
     @Autowired
@@ -36,12 +37,16 @@ public class SecurityWebApplication extends WebSecurityConfigurerAdapter {
     @Value("${spring.queries.authorization}")
     private String queryAuthorization;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        log.info("query for auth: {}", queryAuthentication);
         auth
                 .jdbcAuthentication()
                 .dataSource(dataSource)
-                .passwordEncoder(passwordEncoder())
+                .passwordEncoder(passwordEncoder)
                 .usersByUsernameQuery(queryAuthentication)
                 .authoritiesByUsernameQuery(queryAuthorization);
     }
@@ -63,7 +68,7 @@ public class SecurityWebApplication extends WebSecurityConfigurerAdapter {
         http.cors().disable()
                 .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
 
-        http.antMatcher("/app/**").authorizeRequests()
+        http.authorizeRequests()
                 .antMatchers("/oauth/**",
                         "/swagger-ui.html",
                         "/swagger-resources/**",
@@ -81,9 +86,6 @@ public class SecurityWebApplication extends WebSecurityConfigurerAdapter {
                 .permitAll();
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(11);
-    }
+
 
 }
