@@ -1,11 +1,12 @@
 package com.tabeldata.oauth.repository;
 
 import com.maryanto.dimas.plugins.web.commons.ui.datatables.DataTablesRequest;
+import com.maryanto.dimas.plugins.web.commons.ui.datatables.OrderingByColumns;
 import com.tabeldata.oauth.models.OauthAccessTokenExtended;
 import com.tabeldata.oauth.models.OauthAccessTokenHistory;
+import com.tabeldata.utils.QueryComparator;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -38,50 +39,64 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+@Slf4j
 public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements JdbcTokenStoreCustom {
 
-    private final static Logger console = LoggerFactory.getLogger(JdbcTokenStoreCustomPostgreSQL.class);
-
+    //language=PostgreSQL
     private String insertAccessTokenSql = "insert into oauth.access_token (token_id, token, auth_id, user_name, client_id, authentication, refresh_token, ip_address)\n" +
             "values (?, ?, ?, ?, ?, ?, ?, ?)";
+    //language=PostgreSQL
     private String selectAccessTokenSql = "select token_id, token\n" +
             "from oauth.access_token\n" +
             "where token_id = ?";
+    //language=PostgreSQL
     private String selectAccessTokenAuthenticationSql = "select token_id, authentication\n" +
             "from oauth.access_token\n" +
             "where token_id = ?";
+    //language=PostgreSQL
     private String selectAccessTokenFromAuthenticationSql = "select token_id, token\n" +
             "from oauth.access_token\n" +
             "where auth_id = ?";
+    //language=PostgreSQL
     private String selectAccessTokensFromUserNameAndClientIdSql = "select token_id, token\n" +
             "from oauth.access_token\n" +
             "where user_name = ?\n" +
             "  and client_id = ?";
+    //language=PostgreSQL
     private String selectAccessTokensFromUserNameSql = "select token_id, token\n" +
             "from oauth.access_token\n" +
             "where user_name = ?";
+    //language=PostgreSQL
     private String selectAccessTokensFromClientIdSql = "select token_id, token\n" +
             "from oauth.access_token\n" +
             "where client_id = ?";
+    //language=PostgreSQL
     private String deleteAccessTokenSql = "delete\n" +
             "from oauth.access_token\n" +
             "where token_id = ?";
+    //language=PostgreSQL
     private String insertRefreshTokenSql = "insert into oauth.refresh_token (token_id, token, authentication)\n" +
             "values (?, ?, ?)";
+    //language=PostgreSQL
     private String selectRefreshTokenSql = "select token_id, token\n" +
             "from oauth.refresh_token\n" +
             "where token_id = ?";
+    //language=PostgreSQL
     private String selectRefreshTokenAuthenticationSql = "select token_id, authentication\n" +
             "from oauth.refresh_token\n" +
             "where token_id = ?";
+    //language=PostgreSQL
     private String deleteRefreshTokenSql = "delete\n" +
             "from oauth.refresh_token\n" +
             "where token_id = ?";
+    //language=PostgreSQL
     private String deleteAccessTokenFromRefreshTokenSql = "delete\n" +
             "from oauth.access_token\n" +
             "where refresh_token = ?";
+    //language=PostgreSQL
     private String insertHistoryAccessTokenSql = "insert into oauth.history_access_token (id, access_id, client_id, token, ip_address, user_name, login_at, is_logout, logout_at, logout_by)\n" +
             "VALUES (uuid_generate_v4(), ?, ?, ?, ?, ?, now(), false, null, null)";
+    //language=PostgreSQL
     private String updateHistoryAccessTokenSql = "update oauth.history_access_token\n" +
             "set is_logout = true,\n" +
             "    logout_at = now(),\n" +
@@ -120,11 +135,11 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
                     (rs, rowNum) -> JdbcTokenStoreCustomPostgreSQL.this.deserializeAccessToken(rs.getBytes(2)),
                     key);
         } catch (EmptyResultDataAccessException var5) {
-            if (console.isDebugEnabled()) {
-                console.debug("Failed to find access token for authentication " + authentication);
+            if (log.isDebugEnabled()) {
+                log.debug("Failed to find access token for authentication " + authentication);
             }
         } catch (IllegalArgumentException var6) {
-            console.error("Could not extract access token for authentication " + authentication, var6);
+            log.error("Could not extract access token for authentication " + authentication, var6);
         }
 
         if (accessToken != null && !key.equals(this.authenticationKeyGenerator.extractKey(this.readAuthentication(accessToken.getValue())))) {
@@ -186,11 +201,11 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
                     (rs, rowNum) -> JdbcTokenStoreCustomPostgreSQL.this.deserializeAccessToken(rs.getBytes(2)),
                     this.extractTokenKey(tokenValue));
         } catch (EmptyResultDataAccessException var4) {
-            if (console.isInfoEnabled()) {
-                console.info("Failed to find access token for token " + tokenValue);
+            if (log.isInfoEnabled()) {
+                log.info("Failed to find access token for token " + tokenValue);
             }
         } catch (IllegalArgumentException var5) {
-            console.warn("Failed to deserialize access token for " + tokenValue, var5);
+            log.warn("Failed to deserialize access token for " + tokenValue, var5);
             this.removeAccessToken(tokenValue);
         }
 
@@ -248,11 +263,11 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
                     (rs, rowNum) -> JdbcTokenStoreCustomPostgreSQL.this.deserializeAuthentication(rs.getBytes(2)),
                     this.extractTokenKey(token));
         } catch (EmptyResultDataAccessException var4) {
-            if (console.isInfoEnabled()) {
-                console.info("Failed to find access token for token " + token);
+            if (log.isInfoEnabled()) {
+                log.info("Failed to find access token for token " + token);
             }
         } catch (IllegalArgumentException var5) {
-            console.warn("Failed to deserialize authentication for " + token, var5);
+            log.warn("Failed to deserialize authentication for " + token, var5);
             this.removeAccessToken(token);
         }
 
@@ -280,11 +295,11 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
                     (rs, rowNum) -> JdbcTokenStoreCustomPostgreSQL.this.deserializeRefreshToken(rs.getBytes(2)),
                     this.extractTokenKey(token));
         } catch (EmptyResultDataAccessException var4) {
-            if (console.isInfoEnabled()) {
-                console.info("Failed to find refresh token for token " + token);
+            if (log.isInfoEnabled()) {
+                log.info("Failed to find refresh token for token " + token);
             }
         } catch (IllegalArgumentException var5) {
-            console.warn("Failed to deserialize refresh token for token " + token, var5);
+            log.warn("Failed to deserialize refresh token for token " + token, var5);
             this.removeRefreshToken(token);
         }
 
@@ -316,11 +331,11 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
                     (rs, rowNum) -> JdbcTokenStoreCustomPostgreSQL.this.deserializeAuthentication(rs.getBytes(2)),
                     this.extractTokenKey(value));
         } catch (EmptyResultDataAccessException var4) {
-            if (console.isInfoEnabled()) {
-                console.info("Failed to find access token for token " + value);
+            if (log.isInfoEnabled()) {
+                log.info("Failed to find access token for token " + value);
             }
         } catch (IllegalArgumentException var5) {
-            console.warn("Failed to deserialize access token for " + value, var5);
+            log.warn("Failed to deserialize access token for " + value, var5);
             this.removeRefreshToken(value);
         }
 
@@ -347,8 +362,8 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
                     new JdbcTokenStoreCustomPostgreSQL.SafeAccessTokenRowMapper(),
                     clientId);
         } catch (EmptyResultDataAccessException var4) {
-            if (console.isInfoEnabled()) {
-                console.info("Failed to find access token for clientId " + clientId);
+            if (log.isInfoEnabled()) {
+                log.info("Failed to find access token for clientId " + clientId);
             }
         }
 
@@ -365,8 +380,8 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
                     new JdbcTokenStoreCustomPostgreSQL.SafeAccessTokenRowMapper(),
                     userName);
         } catch (EmptyResultDataAccessException var4) {
-            if (console.isInfoEnabled()) {
-                console.info("Failed to find access token for userName " + userName);
+            if (log.isInfoEnabled()) {
+                log.info("Failed to find access token for userName " + userName);
             }
         }
 
@@ -383,8 +398,8 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
                     new JdbcTokenStoreCustomPostgreSQL.SafeAccessTokenRowMapper(),
                     userName, clientId);
         } catch (EmptyResultDataAccessException var5) {
-            if (console.isInfoEnabled()) {
-                console.info("Failed to find access token for clientId " + clientId + " and userName " + userName);
+            if (log.isInfoEnabled()) {
+                log.info("Failed to find access token for clientId " + clientId + " and userName " + userName);
             }
         }
 
@@ -450,58 +465,6 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
         return (OAuth2Authentication) SerializationUtils.deserialize(authentication);
     }
 
-    public void setInsertAccessTokenSql(String insertAccessTokenSql) {
-        this.insertAccessTokenSql = insertAccessTokenSql;
-    }
-
-    public void setSelectAccessTokenSql(String selectAccessTokenSql) {
-        this.selectAccessTokenSql = selectAccessTokenSql;
-    }
-
-    public void setDeleteAccessTokenSql(String deleteAccessTokenSql) {
-        this.deleteAccessTokenSql = deleteAccessTokenSql;
-    }
-
-    public void setInsertRefreshTokenSql(String insertRefreshTokenSql) {
-        this.insertRefreshTokenSql = insertRefreshTokenSql;
-    }
-
-    public void setSelectRefreshTokenSql(String selectRefreshTokenSql) {
-        this.selectRefreshTokenSql = selectRefreshTokenSql;
-    }
-
-    public void setDeleteRefreshTokenSql(String deleteRefreshTokenSql) {
-        this.deleteRefreshTokenSql = deleteRefreshTokenSql;
-    }
-
-    public void setSelectAccessTokenAuthenticationSql(String selectAccessTokenAuthenticationSql) {
-        this.selectAccessTokenAuthenticationSql = selectAccessTokenAuthenticationSql;
-    }
-
-    public void setSelectRefreshTokenAuthenticationSql(String selectRefreshTokenAuthenticationSql) {
-        this.selectRefreshTokenAuthenticationSql = selectRefreshTokenAuthenticationSql;
-    }
-
-    public void setSelectAccessTokenFromAuthenticationSql(String selectAccessTokenFromAuthenticationSql) {
-        this.selectAccessTokenFromAuthenticationSql = selectAccessTokenFromAuthenticationSql;
-    }
-
-    public void setDeleteAccessTokenFromRefreshTokenSql(String deleteAccessTokenFromRefreshTokenSql) {
-        this.deleteAccessTokenFromRefreshTokenSql = deleteAccessTokenFromRefreshTokenSql;
-    }
-
-    public void setSelectAccessTokensFromUserNameSql(String selectAccessTokensFromUserNameSql) {
-        this.selectAccessTokensFromUserNameSql = selectAccessTokensFromUserNameSql;
-    }
-
-    public void setSelectAccessTokensFromUserNameAndClientIdSql(String selectAccessTokensFromUserNameAndClientIdSql) {
-        this.selectAccessTokensFromUserNameAndClientIdSql = selectAccessTokensFromUserNameAndClientIdSql;
-    }
-
-    public void setSelectAccessTokensFromClientIdSql(String selectAccessTokensFromClientIdSql) {
-        this.selectAccessTokensFromClientIdSql = selectAccessTokensFromClientIdSql;
-    }
-
     /**
      * private String username;
      * private String clientId;
@@ -516,63 +479,31 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
     @Override
     public List<OauthAccessTokenExtended> datatables(DataTablesRequest<OauthAccessTokenExtended> params) {
         MapSqlParameterSource map = new MapSqlParameterSource();
-        StringBuilder sb = new StringBuilder("select auth_id    as authentication_id,\n" +
+        //language=PostgreSQL
+        String baseQuery = "select auth_id    as authentication_id,\n" +
                 "       token_id   as token_id,\n" +
                 "       token      as access_token,\n" +
                 "       user_name   as username,\n" +
                 "       client_id  as client_id,\n" +
                 "       ip_address as ip_address,\n" +
                 "       login_at   as login_time\n" +
-                "from oauth.access_token where 1=1 ");
+                "from oauth.access_token where 1=1 ";
+        OauthAccessTokenExtendedQueryComparator queryComparator = new OauthAccessTokenExtendedQueryComparator(baseQuery, map);
+        StringBuilder query = queryComparator.getQuery(params.getValue());
+        map = queryComparator.getParameters();
 
-        OauthAccessTokenExtended value = params.getValue();
-        if (StringUtils.isNotBlank(value.getClientId())) {
-            sb.append(" and client_id like :clientId ");
-            map.addValue("clientId", new StringBuilder("%").append(value.getClientId()).append("%").toString());
-        }
+        OrderingByColumns serviceColumn = new OrderingByColumns("user_name", "client_id", "ip_address", "login_time");
+        query.append(serviceColumn.orderBy(params.getColDir(), params.getColOrder()));
 
-        if (StringUtils.isNotBlank(value.getUsername())) {
-            sb.append(" and user_name like :userName ");
-            map.addValue("userName", new StringBuilder("%").append(value.getUsername()).append("%").toString());
-        }
 
-        if (StringUtils.isNotBlank(value.getIpAddress())) {
-            sb.append(" and ip_address = :ipAddress ");
-            map.addValue("ipAddress", value.getIpAddress());
-        }
-
-        if (params.getColOrder() != null) {
-            switch (params.getColOrder().intValue()) {
-                case 0:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        sb.append(" order by user_name asc ");
-                    else sb.append(" order by user_name desc ");
-                    break;
-                case 1:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        sb.append(" order by client_id asc ");
-                    else sb.append(" order by client_id desc ");
-                    break;
-                case 2:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        sb.append(" order by ip_address asc ");
-                    else sb.append(" order by ip_address desc ");
-                    break;
-                case 3:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        sb.append(" order by login_time asc ");
-                    else sb.append(" order by login_time desc ");
-                    break;
-            }
-        }
-
-        sb.append(" limit :limit ").append(" offset :offset ");
+        query.append(" limit :limit ").append(" offset :offset ");
         map.addValue("limit", params.getLength());
         map.addValue("offset", params.getStart());
 
-        List<OauthAccessTokenExtended> list = this.namedJdbcTemplate.query(sb.toString(), map, (resultSet, i) -> {
+        List<OauthAccessTokenExtended> list = this.namedJdbcTemplate.query(query.toString(), map, (resultSet, i) -> {
             try {
-                OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomPostgreSQL.this.deserializeAccessToken(resultSet.getBytes("access_token"));
+                OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomPostgreSQL.
+                        this.deserializeAccessToken(resultSet.getBytes("access_token"));
                 return new OauthAccessTokenExtended(
                         resultSet.getString("username"),
                         resultSet.getString("client_id"),
@@ -592,31 +523,54 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
 
     @Override
     public Long datatables(OauthAccessTokenExtended value) {
-        StringBuilder sb = new StringBuilder("select count(*) as rows from oauth.access_token where 1=1 ");
+        //language=PostgreSQL
+        String baseQuery = "select count(*) as rows from oauth.access_token where 1=1 ";
         MapSqlParameterSource map = new MapSqlParameterSource();
 
-        if (StringUtils.isNotBlank(value.getClientId())) {
-            sb.append(" and client_id like :clientId ");
-            map.addValue("clientId", new StringBuilder("%").append(value.getClientId()).append("%").toString());
+        OauthAccessTokenExtendedQueryComparator queryComparator = new OauthAccessTokenExtendedQueryComparator(baseQuery, map);
+        StringBuilder query = queryComparator.getQuery(value);
+        map = queryComparator.getParameters();
+
+        return this.namedJdbcTemplate.queryForObject(
+                query.toString(), map,
+                (resultSet, i) -> resultSet.getLong("rows")
+        );
+    }
+
+    private class OauthAccessTokenExtendedQueryComparator implements QueryComparator<OauthAccessTokenExtended> {
+
+        private StringBuilder builder;
+        private MapSqlParameterSource parameterSource;
+
+        public OauthAccessTokenExtendedQueryComparator(String baseQuery, MapSqlParameterSource parameterSource) {
+            this.builder = new StringBuilder(baseQuery);
+            this.parameterSource = parameterSource;
         }
 
-        if (StringUtils.isNotBlank(value.getUsername())) {
-            sb.append(" and user_name like :userName ");
-            map.addValue("userName", new StringBuilder("%").append(value.getUsername()).append("%").toString());
-        }
-
-        if (StringUtils.isNotBlank(value.getIpAddress())) {
-            sb.append(" and ip_address = :ipAddress ");
-            map.addValue("ipAddress", value.getIpAddress());
-        }
-
-        Long row = this.namedJdbcTemplate.queryForObject(sb.toString(), map, new RowMapper<Long>() {
-            @Override
-            public Long mapRow(ResultSet resultSet, int i) throws SQLException {
-                return resultSet.getLong("rows");
+        @Override
+        public StringBuilder getQuery(OauthAccessTokenExtended value) {
+            if (StringUtils.isNotBlank(value.getClientId())) {
+                builder.append(" and client_id like :clientId ");
+                parameterSource.addValue("clientId", new StringBuilder("%").append(value.getClientId()).append("%").toString());
             }
-        });
-        return row;
+
+            if (StringUtils.isNotBlank(value.getUsername())) {
+                builder.append(" and user_name like :userName ");
+                parameterSource.addValue("userName", new StringBuilder("%").append(value.getUsername()).append("%").toString());
+            }
+
+            if (StringUtils.isNotBlank(value.getIpAddress())) {
+                builder.append(" and ip_address = :ipAddress ");
+                parameterSource.addValue("ipAddress", value.getIpAddress());
+            }
+
+            return this.builder;
+        }
+
+        @Override
+        public MapSqlParameterSource getParameters() {
+            return this.parameterSource;
+        }
     }
 
     /**
@@ -640,7 +594,8 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
             String clientId,
             DataTablesRequest<OauthAccessTokenHistory> params) {
         MapSqlParameterSource map = new MapSqlParameterSource();
-        StringBuilder queryBuilder = new StringBuilder("select access_id,\n" +
+        //language=PostgreSQL
+        String baseQuery = "select access_id,\n" +
                 "       token,\n" +
                 "       client_id,\n" +
                 "       ip_address,\n" +
@@ -652,86 +607,39 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
                 "from oauth.history_access_token\n" +
                 "where 1 = 1\n" +
                 "  and client_id = :clientId\n" +
-                "  and user_name = :userName ");
+                "  and user_name = :userName ";
         map.addValue("clientId", clientId);
         map.addValue("userName", username);
 
-        OauthAccessTokenHistory value = params.getValue();
-        if (value.getLogout() != null) {
-            queryBuilder.append(" and is_logout = :isLogout ");
-            map.addValue("isLogout", value.getLogout());
-        }
+        OauthAccessTokenHistoryByUserAndClientId queryComparator = new OauthAccessTokenHistoryByUserAndClientId(baseQuery, map);
+        StringBuilder queryBuilder = queryComparator.getQuery(params.getValue());
+        map = queryComparator.getParameters();
 
-        if (StringUtils.isNotBlank(value.getIpAddress())) {
-            queryBuilder.append(" and ip_address like :ipAddress ");
-            map.addValue("ipAddress", new StringBuilder("%").append(value.getIpAddress()).append("%").toString());
-        }
-
-        if (params.getColOrder() != null) {
-            switch (params.getColOrder().intValue()) {
-                case 0:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by user_name asc ");
-                    else queryBuilder.append(" order by user_name desc ");
-                    break;
-                case 1:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by client_id asc ");
-                    else queryBuilder.append(" order by client_id desc ");
-                    break;
-                case 2:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by ip_address asc ");
-                    else queryBuilder.append(" order by ip_address desc ");
-                    break;
-                case 3:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by login_at asc ");
-                    else queryBuilder.append(" order by login_at desc ");
-                    break;
-                case 4:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by is_logout asc ");
-                    else queryBuilder.append(" order by is_logout desc ");
-                    break;
-                case 5:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by logout_at asc ");
-                    else queryBuilder.append(" order by logout_at desc ");
-                    break;
-                case 6:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by logout_by asc ");
-                    else queryBuilder.append(" order by logout_by desc ");
-                    break;
-            }
-        }
+        OrderingByColumns serviceOrder = new OrderingByColumns("user_name", "client_id", "ip_address", "login_at", "is_logout", "logout_at", "logout_by", "logout_by", "");
+        queryBuilder.append(serviceOrder.orderBy(params.getColDir(), params.getColOrder()));
 
         queryBuilder.append(" limit :limit ").append(" offset :offset ");
         map.addValue("limit", params.getLength());
         map.addValue("offset", params.getStart());
 
-        List<OauthAccessTokenHistory> list = this.namedJdbcTemplate.query(queryBuilder.toString(), map, new RowMapper<OauthAccessTokenHistory>() {
-            @Override
-            public OauthAccessTokenHistory mapRow(ResultSet resultSet, int i) throws SQLException {
-                try {
-                    OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomPostgreSQL.this.deserializeAccessToken(resultSet.getBytes("token"));
-                    return new OauthAccessTokenHistory(
-                            resultSet.getString("user_name"),
-                            resultSet.getString("client_id"),
-                            resultSet.getString("ip_address"),
-                            oauth2AccessToken.getValue(),
-                            resultSet.getTimestamp("login_at"),
-                            new Timestamp(oauth2AccessToken.getExpiration().getTime()),
-                            resultSet.getBoolean("is_logout"),
-                            resultSet.getTimestamp("logout_at"),
-                            resultSet.getString("logout_by")
-                    );
-                } catch (IllegalArgumentException var5) {
-                    String token = resultSet.getString("access_id");
-                    JdbcTokenStoreCustomPostgreSQL.this.jdbcTemplate.update(JdbcTokenStoreCustomPostgreSQL.this.deleteAccessTokenSql, token);
-                    return null;
-                }
+        List<OauthAccessTokenHistory> list = this.namedJdbcTemplate.query(queryBuilder.toString(), map, (resultSet, i) -> {
+            try {
+                OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomPostgreSQL.this.deserializeAccessToken(resultSet.getBytes("token"));
+                return new OauthAccessTokenHistory(
+                        resultSet.getString("user_name"),
+                        resultSet.getString("client_id"),
+                        resultSet.getString("ip_address"),
+                        oauth2AccessToken.getValue(),
+                        resultSet.getTimestamp("login_at"),
+                        new Timestamp(oauth2AccessToken.getExpiration().getTime()),
+                        resultSet.getBoolean("is_logout"),
+                        resultSet.getTimestamp("logout_at"),
+                        resultSet.getString("logout_by")
+                );
+            } catch (IllegalArgumentException var5) {
+                String token = resultSet.getString("access_id");
+                JdbcTokenStoreCustomPostgreSQL.this.jdbcTemplate.update(JdbcTokenStoreCustomPostgreSQL.this.deleteAccessTokenSql, token);
+                return null;
             }
         });
         return list;
@@ -740,31 +648,50 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
 
     public Long historyByUsernameAndClientIdDatatables(String username, String clientId, OauthAccessTokenHistory param) {
         MapSqlParameterSource map = new MapSqlParameterSource();
-        StringBuilder queryBuilder = new StringBuilder("select count(*) as rows\n" +
+        //language=PostgreSQL
+        String baseQuery = "select count(*) as rows\n" +
                 "from oauth.history_access_token\n" +
                 "where 1 = 1 \n" +
                 "  and client_id = :clientId\n " +
-                "  and user_name = :userName ");
+                "  and user_name = :userName ";
         map.addValue("clientId", clientId);
         map.addValue("userName", username);
 
-        if (param.getLogout() != null) {
-            queryBuilder.append(" and is_logout = :isLogout ");
-            map.addValue("isLogout", param.getLogout());
+        OauthAccessTokenHistoryByUserAndClientId queryComparator = new OauthAccessTokenHistoryByUserAndClientId(baseQuery, map);
+        StringBuilder queryBuilder = queryComparator.getQuery(param);
+        map = queryComparator.getParameters();
+
+        return this.namedJdbcTemplate.queryForObject(queryBuilder.toString(), map, (resultSet, i) -> resultSet.getLong("rows"));
+    }
+
+    private class OauthAccessTokenHistoryByUserAndClientId implements QueryComparator<OauthAccessTokenHistory> {
+
+        private StringBuilder builder;
+        private MapSqlParameterSource parameterSource;
+
+        public OauthAccessTokenHistoryByUserAndClientId(String baseQuery, MapSqlParameterSource parameterSource) {
+            this.builder = new StringBuilder(baseQuery);
+            this.parameterSource = parameterSource;
         }
 
-        if (StringUtils.isNotBlank(param.getIpAddress())) {
-            queryBuilder.append(" and ip_address like :ipAddress ");
-            map.addValue("ipAddress", new StringBuilder("%").append(param.getIpAddress()).append("%").toString());
-        }
-
-        Long row = this.namedJdbcTemplate.queryForObject(queryBuilder.toString(), map, new RowMapper<Long>() {
-            @Override
-            public Long mapRow(ResultSet resultSet, int i) throws SQLException {
-                return resultSet.getLong("rows");
+        @Override
+        public StringBuilder getQuery(OauthAccessTokenHistory value) {
+            if (value.getLogout() != null) {
+                builder.append(" and is_logout = :isLogout ");
+                parameterSource.addValue("isLogout", value.getLogout());
             }
-        });
-        return row;
+
+            if (StringUtils.isNotBlank(value.getIpAddress())) {
+                builder.append(" and ip_address like :ipAddress ");
+                parameterSource.addValue("ipAddress", new StringBuilder("%").append(value.getIpAddress()).append("%").toString());
+            }
+            return this.builder;
+        }
+
+        @Override
+        public MapSqlParameterSource getParameters() {
+            return this.parameterSource;
+        }
     }
 
     /**
@@ -786,7 +713,8 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
             String username,
             DataTablesRequest<OauthAccessTokenHistory> params) {
         MapSqlParameterSource map = new MapSqlParameterSource();
-        StringBuilder queryBuilder = new StringBuilder("select access_id,\n" +
+
+        String baseQuery = "select access_id,\n" +
                 "       token,\n" +
                 "       client_id,\n" +
                 "       ip_address,\n" +
@@ -797,90 +725,38 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
                 "       logout_by\n" +
                 "from oauth.history_access_token\n" +
                 "where 1 = 1\n" +
-                "  and user_name = :userName ");
+                "  and user_name = :userName ";
         map.addValue("userName", username);
 
-        OauthAccessTokenHistory value = params.getValue();
-        if (value.getLogout() != null) {
-            queryBuilder.append(" and is_logout = :isLogout ");
-            map.addValue("isLogout", value.getLogout());
-        }
+        OauthAccessTokenHistoryByUser queryComparator = new OauthAccessTokenHistoryByUser(baseQuery, map);
+        StringBuilder queryBuilder = queryComparator.getQuery(params.getValue());
+        map = queryComparator.getParameters();
 
-        if (StringUtils.isNotBlank(value.getClientId())) {
-            queryBuilder.append(" and client_id like :clintId ");
-            map.addValue("clintId", new StringBuilder("%").append(value.getClientId()).append("%").toString());
-        }
-
-        if (StringUtils.isNotBlank(value.getIpAddress())) {
-            queryBuilder.append(" and ip_address like :ipAddress ");
-            map.addValue("ipAddress", new StringBuilder("%").append(value.getIpAddress()).append("%").toString());
-        }
-
-        if (params.getColOrder() != null) {
-            switch (params.getColOrder().intValue()) {
-                case 0:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by user_name asc ");
-                    else queryBuilder.append(" order by user_name desc ");
-                    break;
-                case 1:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by client_id asc ");
-                    else queryBuilder.append(" order by client_id desc ");
-                    break;
-                case 2:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by ip_address asc ");
-                    else queryBuilder.append(" order by ip_address desc ");
-                    break;
-                case 3:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by login_at asc ");
-                    else queryBuilder.append(" order by login_at desc ");
-                    break;
-                case 4:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by is_logout asc ");
-                    else queryBuilder.append(" order by is_logout desc ");
-                    break;
-                case 5:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by logout_at asc ");
-                    else queryBuilder.append(" order by logout_at desc ");
-                    break;
-                case 6:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by logout_by asc ");
-                    else queryBuilder.append(" order by logout_by desc ");
-                    break;
-            }
-        }
+        OrderingByColumns serviceColumns = new OrderingByColumns("user_name", "client_id", "ip_address", "login_at", "is_logout", "logout_at", "logout_by");
+        queryBuilder.append(serviceColumns.orderBy(params.getColDir(), params.getColOrder()));
 
         queryBuilder.append(" limit :limit ").append(" offset :offset ");
         map.addValue("limit", params.getLength());
         map.addValue("offset", params.getStart());
 
-        List<OauthAccessTokenHistory> list = this.namedJdbcTemplate.query(queryBuilder.toString(), map, new RowMapper<OauthAccessTokenHistory>() {
-            @Override
-            public OauthAccessTokenHistory mapRow(ResultSet resultSet, int i) throws SQLException {
-                try {
-                    OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomPostgreSQL.this.deserializeAccessToken(resultSet.getBytes("token"));
-                    return new OauthAccessTokenHistory(
-                            resultSet.getString("user_name"),
-                            resultSet.getString("client_id"),
-                            resultSet.getString("ip_address"),
-                            oauth2AccessToken.getValue(),
-                            resultSet.getTimestamp("login_at"),
-                            new Timestamp(oauth2AccessToken.getExpiration().getTime()),
-                            resultSet.getBoolean("is_logout"),
-                            resultSet.getTimestamp("logout_at"),
-                            resultSet.getString("logout_by")
-                    );
-                } catch (IllegalArgumentException var5) {
-                    String token = resultSet.getString("access_id");
-                    JdbcTokenStoreCustomPostgreSQL.this.jdbcTemplate.update(JdbcTokenStoreCustomPostgreSQL.this.deleteAccessTokenSql, token);
-                    return null;
-                }
+        List<OauthAccessTokenHistory> list = this.namedJdbcTemplate.query(queryBuilder.toString(), map, (resultSet, i) -> {
+            try {
+                OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomPostgreSQL.this.deserializeAccessToken(resultSet.getBytes("token"));
+                return new OauthAccessTokenHistory(
+                        resultSet.getString("user_name"),
+                        resultSet.getString("client_id"),
+                        resultSet.getString("ip_address"),
+                        oauth2AccessToken.getValue(),
+                        resultSet.getTimestamp("login_at"),
+                        new Timestamp(oauth2AccessToken.getExpiration().getTime()),
+                        resultSet.getBoolean("is_logout"),
+                        resultSet.getTimestamp("logout_at"),
+                        resultSet.getString("logout_by")
+                );
+            } catch (IllegalArgumentException var5) {
+                String token = resultSet.getString("access_id");
+                JdbcTokenStoreCustomPostgreSQL.this.jdbcTemplate.update(JdbcTokenStoreCustomPostgreSQL.this.deleteAccessTokenSql, token);
+                return null;
             }
         });
         return list;
@@ -889,34 +765,55 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
 
     public Long historyByUsernameDatatables(String username, OauthAccessTokenHistory param) {
         MapSqlParameterSource map = new MapSqlParameterSource();
-        StringBuilder queryBuilder = new StringBuilder("select count(*) as rows\n" +
+        //language=PostgreSQL
+        String baseQuery = "select count(*) as rows\n" +
                 "from oauth.history_access_token\n" +
                 "where 1 = 1 \n" +
-                "  and user_name = :userName ");
+                "  and user_name = :userName ";
         map.addValue("userName", username);
 
-        if (param.getLogout() != null) {
-            queryBuilder.append(" and is_logout = :isLogout ");
-            map.addValue("isLogout", param.getLogout());
+        OauthAccessTokenHistoryByUser queryComparator = new OauthAccessTokenHistoryByUser(baseQuery, map);
+        StringBuilder queryBuilder = queryComparator.getQuery(param);
+        map = queryComparator.getParameters();
+
+        return this.namedJdbcTemplate.queryForObject(
+                queryBuilder.toString(), map,
+                (resultSet, i) -> resultSet.getLong("rows"));
+    }
+
+    private class OauthAccessTokenHistoryByUser implements QueryComparator<OauthAccessTokenHistory> {
+
+        private StringBuilder builder;
+        private MapSqlParameterSource parameterSource;
+
+        public OauthAccessTokenHistoryByUser(String baseQuery, MapSqlParameterSource parameterSource) {
+            this.builder = new StringBuilder(baseQuery);
+            this.parameterSource = parameterSource;
         }
 
-        if (StringUtils.isNotBlank(param.getClientId())) {
-            queryBuilder.append(" and client_id like :clintId ");
-            map.addValue("clintId", new StringBuilder("%").append(param.getClientId()).append("%").toString());
-        }
-
-        if (StringUtils.isNotBlank(param.getIpAddress())) {
-            queryBuilder.append(" and ip_address like :ipAddress ");
-            map.addValue("ipAddress", new StringBuilder("%").append(param.getIpAddress()).append("%").toString());
-        }
-
-        Long row = this.namedJdbcTemplate.queryForObject(queryBuilder.toString(), map, new RowMapper<Long>() {
-            @Override
-            public Long mapRow(ResultSet resultSet, int i) throws SQLException {
-                return resultSet.getLong("rows");
+        @Override
+        public StringBuilder getQuery(OauthAccessTokenHistory param) {
+            if (param.getLogout() != null) {
+                builder.append(" and is_logout = :isLogout ");
+                parameterSource.addValue("isLogout", param.getLogout());
             }
-        });
-        return row;
+
+            if (StringUtils.isNotBlank(param.getClientId())) {
+                builder.append(" and client_id like :clintId ");
+                parameterSource.addValue("clintId", new StringBuilder("%").append(param.getClientId()).append("%").toString());
+            }
+
+            if (StringUtils.isNotBlank(param.getIpAddress())) {
+                builder.append(" and ip_address like :ipAddress ");
+                parameterSource.addValue("ipAddress", new StringBuilder("%").append(param.getIpAddress()).append("%").toString());
+            }
+            return this.builder;
+        }
+
+        @Override
+        public MapSqlParameterSource getParameters() {
+            return this.parameterSource;
+        }
     }
 
 
@@ -939,7 +836,7 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
             String clientId,
             DataTablesRequest<OauthAccessTokenHistory> params) {
         MapSqlParameterSource map = new MapSqlParameterSource();
-        StringBuilder queryBuilder = new StringBuilder("select access_id,\n" +
+        String baseQuery = "select access_id,\n" +
                 "       token,\n" +
                 "       client_id,\n" +
                 "       ip_address,\n" +
@@ -950,90 +847,38 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
                 "       logout_by\n" +
                 "from oauth.history_access_token\n" +
                 "where 1 = 1\n" +
-                "  and client_id = :clientId ");
+                "  and client_id = :clientId ";
         map.addValue("clientId", clientId);
 
-        OauthAccessTokenHistory value = params.getValue();
-        if (value.getLogout() != null) {
-            queryBuilder.append(" and is_logout = :isLogout ");
-            map.addValue("isLogout", value.getLogout());
-        }
+        OauthAccessTokenHistoryByClientId queryComparator = new OauthAccessTokenHistoryByClientId(baseQuery, map);
+        StringBuilder queryBuilder = queryComparator.getQuery(params.getValue());
+        map = queryComparator.getParameters();
 
-        if (StringUtils.isNotBlank(value.getUsername())) {
-            queryBuilder.append(" and user_name like :userName ");
-            map.addValue("userName", new StringBuilder("%").append(value.getUsername()).append("%").toString());
-        }
-
-        if (StringUtils.isNotBlank(value.getIpAddress())) {
-            queryBuilder.append(" and ip_address like :ipAddress ");
-            map.addValue("ipAddress", new StringBuilder("%").append(value.getIpAddress()).append("%").toString());
-        }
-
-        if (params.getColOrder() != null) {
-            switch (params.getColOrder().intValue()) {
-                case 0:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by user_name asc ");
-                    else queryBuilder.append(" order by user_name desc ");
-                    break;
-                case 1:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by client_id asc ");
-                    else queryBuilder.append(" order by client_id desc ");
-                    break;
-                case 2:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by ip_address asc ");
-                    else queryBuilder.append(" order by ip_address desc ");
-                    break;
-                case 3:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by login_at asc ");
-                    else queryBuilder.append(" order by login_at desc ");
-                    break;
-                case 4:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by is_logout asc ");
-                    else queryBuilder.append(" order by is_logout desc ");
-                    break;
-                case 5:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by logout_at asc ");
-                    else queryBuilder.append(" order by logout_at desc ");
-                    break;
-                case 6:
-                    if (params.getColDir().equalsIgnoreCase("asc"))
-                        queryBuilder.append(" order by logout_by asc ");
-                    else queryBuilder.append(" order by logout_by desc ");
-                    break;
-            }
-        }
+        OrderingByColumns serviceColumns = new OrderingByColumns("user_name", "client_id", "ip_address", "login_at", "is_logout", "is_logout", "logout_at", "logout_by");
+        queryBuilder.append(serviceColumns.orderBy(params.getColDir(), params.getColOrder()));
 
         queryBuilder.append(" limit :limit ").append(" offset :offset ");
         map.addValue("limit", params.getLength());
         map.addValue("offset", params.getStart());
 
-        List<OauthAccessTokenHistory> list = this.namedJdbcTemplate.query(queryBuilder.toString(), map, new RowMapper<OauthAccessTokenHistory>() {
-            @Override
-            public OauthAccessTokenHistory mapRow(ResultSet resultSet, int i) throws SQLException {
-                try {
-                    OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomPostgreSQL.this.deserializeAccessToken(resultSet.getBytes("token"));
-                    return new OauthAccessTokenHistory(
-                            resultSet.getString("user_name"),
-                            resultSet.getString("client_id"),
-                            resultSet.getString("ip_address"),
-                            oauth2AccessToken.getValue(),
-                            resultSet.getTimestamp("login_at"),
-                            new Timestamp(oauth2AccessToken.getExpiration().getTime()),
-                            resultSet.getBoolean("is_logout"),
-                            resultSet.getTimestamp("logout_at"),
-                            resultSet.getString("logout_by")
-                    );
-                } catch (IllegalArgumentException var5) {
-                    String token = resultSet.getString("access_id");
-                    JdbcTokenStoreCustomPostgreSQL.this.jdbcTemplate.update(JdbcTokenStoreCustomPostgreSQL.this.deleteAccessTokenSql, token);
-                    return null;
-                }
+        List<OauthAccessTokenHistory> list = this.namedJdbcTemplate.query(queryBuilder.toString(), map, (resultSet, i) -> {
+            try {
+                OAuth2AccessToken oauth2AccessToken = JdbcTokenStoreCustomPostgreSQL.this.deserializeAccessToken(resultSet.getBytes("token"));
+                return new OauthAccessTokenHistory(
+                        resultSet.getString("user_name"),
+                        resultSet.getString("client_id"),
+                        resultSet.getString("ip_address"),
+                        oauth2AccessToken.getValue(),
+                        resultSet.getTimestamp("login_at"),
+                        new Timestamp(oauth2AccessToken.getExpiration().getTime()),
+                        resultSet.getBoolean("is_logout"),
+                        resultSet.getTimestamp("logout_at"),
+                        resultSet.getString("logout_by")
+                );
+            } catch (IllegalArgumentException var5) {
+                String token = resultSet.getString("access_id");
+                JdbcTokenStoreCustomPostgreSQL.this.jdbcTemplate.update(JdbcTokenStoreCustomPostgreSQL.this.deleteAccessTokenSql, token);
+                return null;
             }
         });
         return list;
@@ -1042,34 +887,51 @@ public class JdbcTokenStoreCustomPostgreSQL extends JdbcTokenStore implements Jd
 
     public Long historyByClientIdDatatables(String clientId, OauthAccessTokenHistory param) {
         MapSqlParameterSource map = new MapSqlParameterSource();
-        StringBuilder queryBuilder = new StringBuilder("select count(*) as rows\n" +
+        String baseQuery = "select count(*) as rows\n" +
                 "from oauth.history_access_token\n" +
                 "where 1 = 1 \n" +
-                "  and client_id = :clientId ");
+                "  and client_id = :clientId ";
         map.addValue("clientId", clientId);
+        OauthAccessTokenHistoryByClientId queryComparator = new OauthAccessTokenHistoryByClientId(baseQuery, map);
+        StringBuilder queryBuilder = queryComparator.getQuery(param);
+        map = queryComparator.getParameters();
 
-        if (param.getLogout() != null) {
-            queryBuilder.append(" and is_logout = :isLogout ");
-            map.addValue("isLogout", param.getLogout());
+        return this.namedJdbcTemplate.queryForObject(queryBuilder.toString(), map, (resultSet, i) -> resultSet.getLong("rows"));
+    }
+
+    private class OauthAccessTokenHistoryByClientId implements QueryComparator<OauthAccessTokenHistory> {
+
+        private StringBuilder builder;
+        private MapSqlParameterSource parameterSource;
+
+        public OauthAccessTokenHistoryByClientId(String baseQuery, MapSqlParameterSource parameterSource) {
+            this.builder = new StringBuilder(baseQuery);
+            this.parameterSource = parameterSource;
         }
 
-        if (StringUtils.isNotBlank(param.getUsername())) {
-            queryBuilder.append(" and user_name like :userName ");
-            map.addValue("userName", new StringBuilder("%").append(param.getUsername()).append("%").toString());
-        }
-
-        if (StringUtils.isNotBlank(param.getIpAddress())) {
-            queryBuilder.append(" and ip_address like :ipAddress ");
-            map.addValue("ipAddress", new StringBuilder("%").append(param.getIpAddress()).append("%").toString());
-        }
-
-        Long row = this.namedJdbcTemplate.queryForObject(queryBuilder.toString(), map, new RowMapper<Long>() {
-            @Override
-            public Long mapRow(ResultSet resultSet, int i) throws SQLException {
-                return resultSet.getLong("rows");
+        @Override
+        public StringBuilder getQuery(OauthAccessTokenHistory param) {
+            if (param.getLogout() != null) {
+                builder.append(" and is_logout = :isLogout ");
+                parameterSource.addValue("isLogout", param.getLogout());
             }
-        });
-        return row;
+
+            if (StringUtils.isNotBlank(param.getUsername())) {
+                builder.append(" and user_name like :userName ");
+                parameterSource.addValue("userName", new StringBuilder("%").append(param.getUsername()).append("%").toString());
+            }
+
+            if (StringUtils.isNotBlank(param.getIpAddress())) {
+                builder.append(" and ip_address like :ipAddress ");
+                parameterSource.addValue("ipAddress", new StringBuilder("%").append(param.getIpAddress()).append("%").toString());
+            }
+            return this.builder;
+        }
+
+        @Override
+        public MapSqlParameterSource getParameters() {
+            return this.parameterSource;
+        }
     }
 
 
