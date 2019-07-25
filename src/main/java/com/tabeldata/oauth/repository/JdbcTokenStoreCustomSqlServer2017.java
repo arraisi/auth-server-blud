@@ -239,15 +239,18 @@ public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements
 
     public void removeAccessToken(String tokenValue, String username) {
         String tokenId = this.extractTokenKey(tokenValue);
+        try {
+            this.jdbcTemplate.update(
+                    this.deleteAccessTokenSql,
+                    tokenId
+            );
 
-        this.jdbcTemplate.update(
-                this.deleteAccessTokenSql,
-                tokenId
-        );
-
-        this.jdbcTemplate.update(
-                this.updateHistoryAccessTokenSql,
-                username, tokenId);
+            this.jdbcTemplate.update(
+                    this.updateHistoryAccessTokenSql,
+                    username, tokenId);
+        } catch (DataAccessException dae) {
+            log.error("can't remove access_token with id = {}", tokenId);
+        }
     }
 
     @Override
