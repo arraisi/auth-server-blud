@@ -7,6 +7,7 @@ import com.tabeldata.oauth.models.OauthAccessTokenHistory;
 import com.tabeldata.utils.QueryComparator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -29,10 +30,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.sql.Types;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -68,10 +66,10 @@ public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements
     //language=TSQL
     private String deleteAccessTokenFromRefreshTokenSql = "delete from OAuth.AccessToken where RefreshToken = ?";
     //language=TSQL
-    private String insertHistoryAccessTokenSql = "insert into OAuth.HistoryAccessToken (Id, AccessId, ClientId, Token, IpAddress, Username, LoginAt, IsLogout, LoginAt, LogoutBy)\n" +
-            "VALUES (newid(), ?, ?, ?, ?, ?, current_timestamp, false, null, null)";
+    private String insertHistoryAccessTokenSql = "insert into OAuth.HistoryAccessToken (Id, AccessId, ClientId, Token, IpAddress, Username, LoginAt, IsLogout, LogoutAt, LogoutBy)\n" +
+            "VALUES (newid(), ?, ?, ?, ?, ?, current_timestamp, 0, null, null)";
     //language=TSQL
-    private String updateHistoryAccessTokenSql = "update OAuth.HistoryAccessToken set IsLogout = true, LogoutBy = current_timestamp, LogoutBy = ?\n" +
+    private String updateHistoryAccessTokenSql = "update OAuth.HistoryAccessToken set IsLogout = 1, LogoutAt = current_timestamp, LogoutBy = ?\n" +
             "where AccessId = ? and IsLogout = 0";
 
     private AuthenticationKeyGenerator authenticationKeyGenerator = new DefaultAuthenticationKeyGenerator();
@@ -151,36 +149,42 @@ public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements
                 getRemoteAddress()
         };
 
-        this.jdbcTemplate.update(
-                this.insertAccessTokenSql,
-                valueParameters,
-                new int[]{
-                        Types.VARCHAR,
-                        Types.VARBINARY,
-                        Types.VARCHAR,
-                        Types.VARCHAR,
-                        Types.VARCHAR,
-                        Types.VARBINARY,
-                        Types.VARCHAR,
-                        Types.VARCHAR}
-        );
+        try {
+            this.jdbcTemplate.update(
+                    this.insertAccessTokenSql,
+                    valueParameters,
+                    new int[]{
+                            Types.VARCHAR,
+                            Types.VARBINARY,
+                            Types.VARCHAR,
+                            Types.VARCHAR,
+                            Types.VARCHAR,
+                            Types.VARBINARY,
+                            Types.VARCHAR,
+                            Types.VARCHAR}
+            );
 
-        this.jdbcTemplate.update(
-                this.insertHistoryAccessTokenSql,
-                new Object[]{
-                        tokenId,
-                        clientId,
-                        tokenLobValue,
-                        getRemoteAddress(),
-                        username},
-                new int[]{
-                        Types.VARCHAR,
-                        Types.VARCHAR,
-                        Types.VARBINARY,
-                        Types.VARCHAR,
-                        Types.VARCHAR
-                }
-        );
+            this.jdbcTemplate.update(
+                    this.insertHistoryAccessTokenSql,
+                    new Object[]{
+                            tokenId,
+                            clientId,
+                            tokenLobValue,
+                            getRemoteAddress(),
+                            username},
+                    new int[]{
+                            Types.VARCHAR,
+                            Types.VARCHAR,
+                            Types.VARBINARY,
+                            Types.VARCHAR,
+                            Types.VARCHAR
+                    }
+            );
+        } catch (DataAccessException dae) {
+            log.error("can't save access token {}", tokenId, dae);
+        } catch (Exception ex) {
+            log.error("can't save access token {}", tokenId, ex);
+        }
 
 
     }
@@ -218,15 +222,19 @@ public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements
     @Override
     public void removeAccessToken(String tokenValue) {
         String tokenId = this.extractTokenKey(tokenValue);
+        try {
 
-        this.jdbcTemplate.update(
-                this.deleteAccessTokenSql,
-                tokenId
-        );
+            this.jdbcTemplate.update(
+                    this.deleteAccessTokenSql,
+                    tokenId
+            );
 
-        this.jdbcTemplate.update(
-                this.updateHistoryAccessTokenSql,
-                "timeout", tokenId);
+            this.jdbcTemplate.update(
+                    this.updateHistoryAccessTokenSql,
+                    "timeout", tokenId);
+        } catch (DataAccessException dae) {
+            log.error("can't remove access_token with id = {}", tokenId);
+        }
     }
 
     public void removeAccessToken(String tokenValue, String username) {
@@ -274,11 +282,18 @@ public class JdbcTokenStoreCustomSqlServer2017 extends JdbcTokenStore implements
 //        SqlLobValue authLobValue = new SqlLobValue(this.serializeAuthentication(authentication)), //TODO sql server not supported
         byte[] tokenLobValue = this.serializeRefreshToken(refreshToken);
         byte[] authLobValue = this.serializeAuthentication(authentication);
-        this.jdbcTemplate.update(
-                this.insertRefreshTokenSql,
-                new Object[]{this.extractTokenKey(refreshToken.getValue()), tokenLobValue, authLobValue},
-                new int[]{Types.VARCHAR, Types.VARBINARY, Types.VARBINARY}
-        );
+        String tokenKey = this.extractTokenKey(refreshToken.getValue());
+        try {
+            this.jdbcTemplate.update(
+                    this.insertRefreshTokenSql,
+                    new Object[]{tokenKey, tokenLobValue, authLobValue},
+                    new int[]{Types.VARCHAR, Types.VARBINARY, Types.VARBINARY}
+            );
+        } catch (DataAccessException dae) {
+            log.error("can't save refresh token: {}", tokenKey, dae);
+        } catch (Exception ex) {
+            log.error("can't save refresh token: {}", tokenKey, ex);
+        }
     }
 
     @Override
