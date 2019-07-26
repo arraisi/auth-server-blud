@@ -25,7 +25,6 @@ public class OauthClientDetailsJdbcLoader implements ClientDetailsService {
     @Autowired
     private OauthClientDetailsService service;
 
-
     @Override
     public ClientDetails loadClientByClientId(String clientId) throws ClientRegistrationException {
         OauthClientDetails client;

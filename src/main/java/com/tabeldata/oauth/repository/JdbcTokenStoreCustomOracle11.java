@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -134,8 +135,9 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
             if (console.isDebugEnabled()) {
                 console.debug("Failed to find access token for authentication " + authentication);
             }
+//            log.error("can't read access token by key {}", key, var5);
         } catch (IllegalArgumentException var6) {
-            console.error("Could not extract access token for authentication " + authentication, var6);
+            log.error("Could not extract access token for authentication " + authentication, var6);
         }
 
         if (accessToken != null && !key.equals(this.authenticationKeyGenerator.extractKey(this.readAuthentication(accessToken.getValue())))) {
@@ -163,28 +165,35 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
         String clientId = authentication.getOAuth2Request().getClientId();
 
         SqlLobValue tokenLobValue = new SqlLobValue(this.serializeAccessToken(token));
-        this.jdbcTemplate.update(
-                this.insertAccessTokenSql,
-                new Object[]{
-                        tokenId,
-                        tokenLobValue,
-                        authId,
-                        username,
-                        clientId,
-                        new SqlLobValue(this.serializeAuthentication(authentication)),
-                        this.extractTokenKey(refreshToken),
-                        getRemoteAddress()
-                }, new int[]{Types.VARCHAR, Types.BLOB, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR, Types.BLOB, Types.VARCHAR, Types.VARCHAR});
+        try {
+            this.jdbcTemplate.update(
+                    this.insertAccessTokenSql,
+                    new Object[]{
+                            tokenId,
+                            tokenLobValue,
+                            authId,
+                            username,
+                            clientId,
+                            new SqlLobValue(this.serializeAuthentication(authentication)),
+                            this.extractTokenKey(refreshToken),
+                            getRemoteAddress()
+                    }, new int[]{Types.VARCHAR, Types.BLOB, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR, Types.BLOB, Types.VARCHAR, Types.VARCHAR});
 
-        this.jdbcTemplate.update(
-                this.insertHistoryAccessTokenSql,
-                new Object[]{
-                        tokenId,
-                        clientId,
-                        tokenLobValue,
-                        getRemoteAddress(),
-                        username},
-                new int[]{Types.VARCHAR, Types.VARCHAR, Types.BLOB, Types.VARCHAR, Types.VARCHAR});
+            this.jdbcTemplate.update(
+                    this.insertHistoryAccessTokenSql,
+                    new Object[]{
+                            tokenId,
+                            clientId,
+                            tokenLobValue,
+                            getRemoteAddress(),
+                            username},
+                    new int[]{Types.VARCHAR, Types.VARCHAR, Types.BLOB, Types.VARCHAR, Types.VARCHAR});
+        } catch (DataAccessException dae) {
+//            log.info("can't save token: {}", tokenId, dae);
+        }catch (Exception ex){
+//            log.info("can't save token: {}", tokenId, ex);
+        }
+
     }
 
     @Override
@@ -200,6 +209,7 @@ public class JdbcTokenStoreCustomOracle11 extends JdbcTokenStore implements Jdbc
             if (console.isInfoEnabled()) {
                 console.info("Failed to find access token for token " + tokenValue);
             }
+//            log.error("can't read access token: ", var4);
         } catch (IllegalArgumentException var5) {
             console.warn("Failed to deserialize access token for " + tokenValue, var5);
             this.removeAccessToken(tokenValue);
