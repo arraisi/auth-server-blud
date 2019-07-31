@@ -20,10 +20,6 @@
 
     <repositories>
         <repository>
-            <id>repository.dimas-maryanto.com</id>
-            <url>http://repository.dimas-maryanto.com:8081/repository/maven-public/</url>
-        </repository>
-        <repository>
             <id>tabeldata.ip-dynamic.com</id>
             <url>http://tabeldata.ip-dynamic.com:8081/repository/maven-public/</url>
         </repository>
