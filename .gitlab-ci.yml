@@ -13,7 +13,7 @@ cache:
     - .m2/repository
 
 installing:
-  stage: deploy
+  stage: build
   before_script:
     - 'mkdir -p $APP_DIR'
     - 'sudo echo -e "[Unit]\n
@@ -38,7 +38,7 @@ WantedBy=multi-user.target
     - 0.0.1-release$/
 
 rebuilding:
-  stage: build
+  stage: deploy
   before_script:
     - 'mvn versions:set -DnewVersion=$CI_COMMIT_TAG'
   script:
