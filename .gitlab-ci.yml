@@ -12,30 +12,7 @@ cache:
   paths:
     - .m2/repository
 
-building:
-  stage: build
-  before_script:
-    - 'mvn versions:set -DnewVersion=$CI_COMMIT_TAG'
-  script:
-    - 'mvn $MAVEN_CLI_OPTS clean package'
-  only:
-    - /-release$/
-  artifacts:
-    paths:
-      - target/*.jar
-
-docker-push:
-  stage: deploy
-  before_script:
-    - 'docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD $DOCKER_REGISTRY_HOSTED'
-    - 'docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD $DOCKER_REGISTRY_PUBLIC'
-    - 'mvn versions:set -DnewVersion=$CI_COMMIT_TAG'
-  script:
-    - 'mvn $MAVEN_CLI_OPTS clean deploy'
-  only:
-    - /-stable/
-
-copy-artifact:
+installing:
   stage: deploy
   before_script:
     - 'mkdir -p $APP_DIR'
@@ -51,10 +28,37 @@ SuccessExitStatus=143\n
 WantedBy=multi-user.target
       " >| /etc/systemd/system/$APP_NAME.service'
     - 'sudo systemctl daemon-reload'
-
   script:
+    - 'mvn versions:set -DnewVersion=$CI_COMMIT_TAG'
+    - 'mvn $MAVEN_CLI_OPTS clean package'
+    - 'cp -u target/*.jar $APP_DIR/$APP_NAME-$CI_COMMIT_TAG.jar'
+    - 'rm -rf $APP_DIR/application.jar && ln -s $APP_DIR/$APP_NAME-$CI_COMMIT_TAG.jar $APP_DIR/application.jar'
+    - 'sudo systemctl restart $APP_NAME.service'
+  only:
+    - 0.0.1-release$/
+
+rebuilding:
+  stage: build
+  before_script:
+    - 'mvn versions:set -DnewVersion=$CI_COMMIT_TAG'
+  script:
+    - 'mvn $MAVEN_CLI_OPTS clean package'
     - 'cp -u target/*.jar $APP_DIR/$APP_NAME-$CI_COMMIT_TAG.jar'
     - 'rm -rf $APP_DIR/application.jar && ln -s $APP_DIR/$APP_NAME-$CI_COMMIT_TAG.jar $APP_DIR/application.jar'
     - 'sudo systemctl restart $APP_NAME.service'
   only:
     - /-release$/
+  artifacts:
+    paths:
+      - target/*.jar
+
+docker-push:
+  stage: deploy
+  before_script:
+    - 'docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD $DOCKER_REGISTRY_HOSTED'
+    - 'docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD $DOCKER_REGISTRY_PUBLIC'
+    - 'mvn versions:set -DnewVersion=$CI_COMMIT_TAG'
+  script:
+    - 'mvn $MAVEN_CLI_OPTS clean deploy'
+  only:
+    - /-final$/
