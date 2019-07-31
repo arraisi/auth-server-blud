@@ -35,7 +35,7 @@ WantedBy=multi-user.target
     - 'rm -rf $APP_DIR/application.jar && ln -s $APP_DIR/$APP_NAME-$CI_COMMIT_TAG.jar $APP_DIR/application.jar'
     - 'sudo systemctl restart $APP_NAME.service'
   only:
-    - 0.0.1-release$/
+    - 0.0.1-release/
 
 rebuilding:
   stage: deploy
