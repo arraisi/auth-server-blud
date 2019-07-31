@@ -3,7 +3,7 @@ variables:
   # change this to your app directory
   APP_DIR: "/home/app/applications/rba-blud/auth-server"
   # change this to your name app
-  APP_NAME: "blud-auth"
+  APP_NAME: "blud-auth-server"
   DOCKER_REGISTRY_HOSTED: "tabeldata.ip-dynamic.com:8087"
   DOCKER_REGISTRY_PUBLIC: "tabeldata.ip-dynamic.com:8088"
   DOCKER_USERNAME: "tabeldata"
