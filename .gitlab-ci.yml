@@ -1,7 +1,7 @@
 variables:
   MAVEN_CLI_OPTS: "--show-version"
   # change this to your app directory
-  APP_DIR: "/home/app/applications/auth"
+  APP_DIR: "/home/app/applications/rba-blud/auth-server"
   # change this to your name app
   APP_NAME: "blud-auth"
   DOCKER_REGISTRY_HOSTED: "tabeldata.ip-dynamic.com:8087"
