@@ -29,17 +29,7 @@ values ('4', 'MONITORING', 'migration', current_timestamp);
 
 -- data menu otoritas
 insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
-VALUES ('001', '0', '001', 'migration', current_timestamp);
-insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
-VALUES ('002', '0', '002', 'migration', current_timestamp);
-insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
-VALUES ('003', '0', '003', 'migration', current_timestamp);
-insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
-VALUES ('004', '0', '004', 'migration', current_timestamp);
-insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
 VALUES ('005', '0', '005', 'migration', current_timestamp);
-insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
-VALUES ('006', '0', '006', 'migration', current_timestamp);
 
 insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
 VALUES ('007', '1', '001', 'migration', current_timestamp);
@@ -52,31 +42,13 @@ VALUES ('010', '1', '004', 'migration', current_timestamp);
 insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
 VALUES ('012', '1', '006', 'migration', current_timestamp);
 
-insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
-VALUES ('013', '2', '001', 'migration', current_timestamp);
-insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
-VALUES ('014', '2', '002', 'migration', current_timestamp);
-insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
-VALUES ('015', '2', '003', 'migration', current_timestamp);
-insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
-VALUES ('016', '2', '004', 'migration', current_timestamp);
+-- data pejabat keuangan
 insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
 VALUES ('017', '2', '005', 'migration', current_timestamp);
-insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
-VALUES ('018', '2', '006', 'migration', current_timestamp);
 
-insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
-VALUES ('019', '3', '001', 'migration', current_timestamp);
-insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
-VALUES ('020', '3', '002', 'migration', current_timestamp);
-insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
-VALUES ('021', '3', '003', 'migration', current_timestamp);
-insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
-VALUES ('022', '3', '004', 'migration', current_timestamp);
+-- data pimpinan BLUD / KEPALA SKPD BLUD SKPD BLUD
 insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
 VALUES ('023', '3', '005', 'migration', current_timestamp);
-insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
-VALUES ('024', '3', '006', 'migration', current_timestamp);
 
 insert into COMPONENT_MENU_MAP_BY_OTORITAS(ID, OTORITAS_ID, MENU_ID, CREATED_BY, CREATED_DATE)
 VALUES ('025', '4', '001', 'migration', current_timestamp);
