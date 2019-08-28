@@ -8,6 +8,6 @@ VALUES ('003', 'Rincian Biaya', 'app.rincian', null, 0, 'migration', 'blud-resou
 insert into COMPONENT_MENUS(ID, TITLE, PATH, ICON_ID, IS_MENU, CREATED_BY, RESOURCE_ID, PARENT_ID)
 VALUES ('004', 'Kegiatan', 'app.kegiatan', null, 0, 'migration', 'blud-resource-server', null);
 insert into COMPONENT_MENUS(ID, TITLE, PATH, ICON_ID, IS_MENU, CREATED_BY, RESOURCE_ID, PARENT_ID)
-VALUES ('005', 'Persetujuan', 'app.ListPersetujuan', null, 0, 'migration', 'blud-resource-server', null);
+VALUES ('005', 'Persetujuan', 'app.persetujuan', null, 0, 'migration', 'blud-resource-server', null);
 insert into COMPONENT_MENUS(ID, TITLE, PATH, ICON_ID, IS_MENU, CREATED_BY, RESOURCE_ID, PARENT_ID)
 VALUES ('006', 'Laporan', 'app.laporan', null, 0, 'migration', 'blud-resource-server', null);
